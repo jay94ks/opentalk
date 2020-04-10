@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1000
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Application", "OpenTalk.Application\OpenTalk.Application.csproj", "{F9DA29D2-829A-4F2F-8149-E2B3D9E8B45D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.IO", "OpenTalk.IO\OpenTalk.IO.csproj", "{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Net", "OpenTalk.Net\OpenTalk.Net.csproj", "{92F44C6C-64AD-4E80-826A-3C2C725A8A85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Server", "OpenTalk.Server\OpenTalk.Server.csproj", "{0A9E6831-1182-44B4-97CA-0F0063899067}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Messages", "OpenTalk.Messages\OpenTalk.Messages.csproj", "{7958C839-3BE4-4D43-B396-F2BD6E782D97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Session", "OpenTalk.Session\OpenTalk.Session.csproj", "{2DA87960-06C3-4424-A59E-5665D12DFA86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9DA29D2-829A-4F2F-8149-E2B3D9E8B45D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9DA29D2-829A-4F2F-8149-E2B3D9E8B45D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9DA29D2-829A-4F2F-8149-E2B3D9E8B45D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9DA29D2-829A-4F2F-8149-E2B3D9E8B45D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92F44C6C-64AD-4E80-826A-3C2C725A8A85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92F44C6C-64AD-4E80-826A-3C2C725A8A85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92F44C6C-64AD-4E80-826A-3C2C725A8A85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92F44C6C-64AD-4E80-826A-3C2C725A8A85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A9E6831-1182-44B4-97CA-0F0063899067}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A9E6831-1182-44B4-97CA-0F0063899067}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A9E6831-1182-44B4-97CA-0F0063899067}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A9E6831-1182-44B4-97CA-0F0063899067}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7958C839-3BE4-4D43-B396-F2BD6E782D97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7958C839-3BE4-4D43-B396-F2BD6E782D97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7958C839-3BE4-4D43-B396-F2BD6E782D97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7958C839-3BE4-4D43-B396-F2BD6E782D97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {84D94A10-71C1-479D-985F-3F1D49191051}
+	EndGlobalSection
+EndGlobal

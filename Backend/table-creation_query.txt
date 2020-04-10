@@ -1,0 +1,42 @@
+CREATE TABLE `otk_member_authorizations` (
+  `authorization` varchar(96) NOT NULL,
+  `member_no` bigint(20) NOT NULL,
+  `textile_server_id` varchar(96) DEFAULT NULL,
+  `authorized_at` datetime DEFAULT NULL,
+  `unauthorized_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`authorization`,`member_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `otk_member_table` (
+  `no` bigint(20) NOT NULL AUTO_INCREMENT,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `password` varchar(45) DEFAULT NULL,
+  `password_date` datetime DEFAULT NULL,
+  `name` varchar(45) DEFAULT NULL,
+  `display_name` varchar(45) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `telphone` varchar(45) DEFAULT NULL,
+  `cellphone` varchar(45) DEFAULT NULL,
+  `active_sessions` int(11) DEFAULT '0',
+  `introduction` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `otk_textile_servers` (
+  `unique_id` varchar(96) NOT NULL,
+  `access_token` varchar(45) DEFAULT NULL,
+  `registered_at` datetime DEFAULT NULL,
+  `boot_time` datetime DEFAULT NULL,
+  `remote_address` varchar(45) DEFAULT NULL,
+  `primary_port` int(11) DEFAULT NULL,
+  `is_online` char(1) DEFAULT 'Y',
+  PRIMARY KEY (`unique_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `otk_unique_strings` (
+  `unique_string` varchar(255) NOT NULL,
+  `unique_label` varchar(8) NOT NULL,
+  `generated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`unique_string`,`unique_label`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

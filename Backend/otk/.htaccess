@@ -1,0 +1,40 @@
+#--------------------------------------------------
+# Open Talk Session Server.
+# Copyright(C) 2020 Jaehoon Joe, jay94ks@gmail.com.
+#--------------------------------------------------
+
+# Deny access to all php files.
+#------------------------------------
+<Files ~ ".*\.php$">
+    Require all denied
+</Files>
+
+# Deny access to all config files.
+#------------------------------------
+<Files ~ ".*\.conf$">
+    Require all denied
+</Files>
+
+# Deny access to files that begin with a dot.
+#------------------------------------
+<Files "\.*">
+    Require all denied
+</Files>
+
+# Allow access to entry point only.
+#------------------------------------
+<Files ".main.php">
+    Require all granted
+</Files>
+
+# Deny all access to {core, modules} directory.
+RewriteEngine On
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Enforce directory index to .entry.php file.
+DirectoryIndex .main.php
+
+# Rewrite all access to entry point.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+) .main.php [QSA,L]
+
