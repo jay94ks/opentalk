@@ -152,7 +152,8 @@ namespace OpenTalk.Internals
                         InvokeFailbacks(SessionError.AuthDenied);
                         break;
 
-                    case 403: /* Forbidden. */
+                    case 400: /* Bad Request. */
+                    case 404: /* Not Found. */
                         InvokeFailbacks(SessionError.AuthInvalidCredential);
                         break;
 
@@ -165,6 +166,7 @@ namespace OpenTalk.Internals
                         InvokeFailbacks(SessionError.AuthResponseError);
                         break;
 
+                    case 403: /* Forbidden. */
                     default:
                         InvokeFailbacks(SessionError.AuthExpiredCredential);
                         break;
@@ -179,7 +181,7 @@ namespace OpenTalk.Internals
                 AuthData authData = Result.ResponseObject;
                 Credential restoration = new TokenizedCredential()
                 {
-                    Identifier = authData.AuthType,
+                    Identifier = authData.Identifier,
                     AuthenticationToken = authData.KeyData1,
                     RestorationToken = authData.KeyData2
                 };

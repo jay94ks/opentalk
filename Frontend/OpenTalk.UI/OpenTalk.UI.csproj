@@ -4,14 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2DA87960-06C3-4424-A59E-5665D12DFA86}</ProjectGuid>
+    <ProjectGuid>{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OpenTalk</RootNamespace>
-    <AssemblyName>OpenTalk.Session</AssemblyName>
+    <AssemblyName>OpenTalk.UI</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,23 +35,30 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Credentials\Credential.cs" />
-    <Compile Include="Credentials\GenericCredential.cs" />
-    <Compile Include="Credentials\TokenizedCredential.cs" />
-    <Compile Include="Internals\Authenticator.cs" />
-    <Compile Include="Internals\Deauthenticator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Session.Auth.cs" />
-    <Compile Include="Session.BaseObject.cs" />
-    <Compile Include="Session.cs" />
-    <Compile Include="SessionError.cs" />
-    <Compile Include="SessionException.cs" />
+    <Compile Include="UI\Extensions\ControlActs.cs" />
+    <Compile Include="UI\Extensions\FormEvents.cs" />
+    <Compile Include="UI\ScreenSwitcher.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Screen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\TextBoxWithPlaceholder.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenTalk.Application\OpenTalk.Application.csproj">
@@ -59,13 +69,18 @@
       <Project>{bc1a0091-e30b-4626-9e31-3dbe8f0d1f2e}</Project>
       <Name>OpenTalk.IO</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenTalk.Messages\OpenTalk.Messages.csproj">
+      <Project>{7958c839-3be4-4d43-b396-f2bd6e782d97}</Project>
+      <Name>OpenTalk.Messages</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpenTalk.Net\OpenTalk.Net.csproj">
       <Project>{92f44c6c-64ad-4e80-826a-3c2c725a8a85}</Project>
       <Name>OpenTalk.Net</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\OpenTalk.Session\OpenTalk.Session.csproj">
+      <Project>{2da87960-06c3-4424-a59e-5665d12dfa86}</Project>
+      <Name>OpenTalk.Session</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -20,7 +20,9 @@ $GLOBALS['_OTK_DB'] = [
 ];
 
 $GLOBALS['_OTK_TABLES'] = [
-    'UNIQUE_STRINGS' =>     OTK_TABLE_PREFIX . 'unique_strings',
-    'TEXTILE_SERVERS' =>    OTK_TABLE_PREFIX . 'textile_servers',
-    'MEMBER_TABLE' =>       OTK_TABLE_PREFIX . 'member_table'
+    'UNIQUE_STRINGS' =>         OTK_TABLE_PREFIX . 'unique_strings',
+    'TEXTILE_SERVERS' =>        OTK_TABLE_PREFIX . 'textile_servers',
+    'MEMBER_TABLE' =>           OTK_TABLE_PREFIX . 'member_table',
+    'MEMBER_RESTORATIONS' =>    OTK_TABLE_PREFIX . 'member_restorations',
+    'MEMBER_AUTHORIZATIONS' =>  OTK_TABLE_PREFIX . 'member_authorizations'
 ];

@@ -34,6 +34,30 @@ namespace OpenTalk.Credentials
         internal void Set(Setter setter) => OnSet(setter);
 
         /// <summary>
+        /// 이 자격증명 정보를 저장합니다.
+        /// </summary>
+        /// <param name="credential"></param>
+        /// <param name="writer"></param>
+        public static void Serialize(Credential credential, BinaryWriter writer)
+        {
+            writer.Write(credential.GetType().AssemblyQualifiedName);
+            credential.Serialize(writer);
+        }
+
+        /// <summary>
+        /// 자격증명 정보를 복원합니다.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="credential"></param>
+        public static void Deserialize(BinaryReader reader, out Credential credential)
+        {
+            credential = (Credential)Type.GetType(reader.ReadString())
+                .GetConstructor(Type.EmptyTypes).Invoke(new object[0]);
+
+            credential.Deserialize(reader);
+        }
+
+        /// <summary>
         /// 인증 정보를 하드디스크에 저장할 때 실행되는 메서드입니다.
         /// </summary>
         /// <param name="writer"></param>

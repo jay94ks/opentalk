@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Messages", "OpenTa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.Session", "OpenTalk.Session\OpenTalk.Session.csproj", "{2DA87960-06C3-4424-A59E-5665D12DFA86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk", "OpenTalk\OpenTalk.csproj", "{BCD3DCA3-4E0F-43E7-9829-7705E237682D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTalk.UI", "OpenTalk.UI\OpenTalk.UI.csproj", "{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DA87960-06C3-4424-A59E-5665D12DFA86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCD3DCA3-4E0F-43E7-9829-7705E237682D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCD3DCA3-4E0F-43E7-9829-7705E237682D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCD3DCA3-4E0F-43E7-9829-7705E237682D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCD3DCA3-4E0F-43E7-9829-7705E237682D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C4CA98C-CF20-4182-8386-2A59EAD3EBDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,7 +18,7 @@ namespace OpenTalk
             private string m_AuthorizationToken;
 
             /// <summary>
-            /// 어떤 동작인지 확인합니다.
+            /// 어떤 동작인지 기술합니다.
             /// </summary>
             public enum Operation
             {

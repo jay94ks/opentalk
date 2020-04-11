@@ -1,10 +1,19 @@
+CREATE TABLE `otk_member_restorations` (
+  `authorization` varchar(96) NOT NULL,
+  `token` varchar(96) NOT NULL,
+  `member_no` bigint(20) DEFAULT NULL,
+  `is_active_key` char(1) DEFAULT 'Y',
+  PRIMARY KEY (`authorization`,`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE `otk_member_authorizations` (
   `authorization` varchar(96) NOT NULL,
+  `textile_token` varchar(96) NOT NULL,
   `member_no` bigint(20) NOT NULL,
   `textile_server_id` varchar(96) DEFAULT NULL,
   `authorized_at` datetime DEFAULT NULL,
   `unauthorized_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`authorization`,`member_no`)
+  PRIMARY KEY (`authorization`,`member_no`,`textile_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `otk_member_table` (

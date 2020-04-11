@@ -36,6 +36,11 @@ namespace OpenTalk
         }
 
         /// <summary>
+        /// 인증 클라이언트를 획득합니다.
+        /// </summary>
+        public Auth Authentication => m_Authenticator;
+
+        /// <summary>
         /// 게이트웨이 서버 URI를 획득합니다.
         /// </summary>
         internal Uri GatewayUri => m_GatewayUri;
@@ -49,8 +54,7 @@ namespace OpenTalk
         /// HttpComponent를 획득합니다.
         /// </summary>
         /// <returns></returns>
-        internal HttpComponent GetHttpComponent() 
-            => HttpComponent.GetHttpComponent(GatewayUri);
+        internal HttpComponent GetHttpComponent() => HttpComponent.GetHttpComponent(GatewayUri);
 
         /// <summary>
         /// 현재 세션 상태를 변경하는 어떤 동작을 이미 진행중인지 확인하고,
