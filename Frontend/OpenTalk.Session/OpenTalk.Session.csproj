@@ -47,6 +47,7 @@
     <Compile Include="Session.Auth.cs" />
     <Compile Include="Session.BaseObject.cs" />
     <Compile Include="Session.cs" />
+    <Compile Include="Session.Textile.cs" />
     <Compile Include="SessionError.cs" />
     <Compile Include="SessionException.cs" />
   </ItemGroup>

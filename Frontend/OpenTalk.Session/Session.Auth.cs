@@ -23,7 +23,8 @@ namespace OpenTalk
             public enum Operation
             {
                 Authentication,
-                Deauthentication
+                Deauthentication,
+                Enforced
             }
 
             /// <summary>
@@ -133,7 +134,8 @@ namespace OpenTalk
                 }
 
                 UnsetAllAuthentications(SessionError.AuthDeauthenticatedForcely);
-                Deauthenticated?.Invoke(Session, Operation.Deauthentication, 
+                Deauthenticated?.Invoke(Session, 
+                    Operation.Deauthentication | Operation.Enforced, 
                     SessionError.AuthDeauthenticatedForcely);
             }
 

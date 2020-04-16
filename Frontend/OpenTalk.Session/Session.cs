@@ -14,6 +14,7 @@ namespace OpenTalk
     public partial class Session : Application.BaseObject
     {
         private Auth m_Authenticator;
+        private Textile m_Messaging;
         private SessionError m_LatestError;
         private bool m_Locked;
         private Uri m_GatewayUri;
@@ -22,23 +23,45 @@ namespace OpenTalk
         /// OpenTalk 세션 객체를 초기화합니다.
         /// </summary>
         public Session(Uri gatewayUri) : this(null, gatewayUri) { }
-
+        
         /// <summary>
         /// OpenTalk 세션 객체를 초기화합니다.
         /// </summary>
         public Session(Application application, Uri gatewayUri) 
             : base(application)
         {
+            if (Application == null)
+                throw new ApplicationException();
+
             m_Locked = false;
             m_LatestError = SessionError.None;
             m_GatewayUri = gatewayUri;
             m_Authenticator = new Auth(this);
+            m_Messaging = new Textile(this);
+
+            Application.Events.DeInitialize += OnShutdown;
+        }
+
+        /// <summary>
+        /// 어플리케이션 전체가 종료되는 중입니다.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnShutdown(object sender, Application.EventArgs e)
+        {
+            if (m_Authenticator.Credential != null)
+                m_Authenticator.EnforceDeauthentication();
         }
 
         /// <summary>
         /// 인증 클라이언트를 획득합니다.
         /// </summary>
         public Auth Authentication => m_Authenticator;
+
+        /// <summary>
+        /// Textile 프로토콜을 사용하는 메세징 객체입니다.
+        /// </summary>
+        public Textile Messaging => m_Messaging;
 
         /// <summary>
         /// 게이트웨이 서버 URI를 획득합니다.

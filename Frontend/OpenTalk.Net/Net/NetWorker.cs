@@ -31,5 +31,12 @@ namespace OpenTalk.Net
         /// 작업자 인스턴스입니다.
         /// </summary>
         public static Application.Worker Worker => TCS.Task.WaitResult();
+
+        /// <summary>
+        /// 네트워크 작업자에서 작업을 실행합니다.
+        /// </summary>
+        /// <param name="functor"></param>
+        /// <returns></returns>
+        public static Task Invoke(Action functor) => Worker.Invoke(functor);
     }
 }
