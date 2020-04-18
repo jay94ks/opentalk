@@ -9,10 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static OpenTalk.UI.CefUnity.CefComponent;
 
 namespace OpenTalk.UI.CefUnity
 {
-    public class CefScreen : Screen
+    public partial class CefScreen : Screen
     {
         private ChromiumWebBrowser m_Browser;
         private Action m_TickAction;
@@ -21,11 +22,48 @@ namespace OpenTalk.UI.CefUnity
         private EventHandlerCollection<CefDialogEventArgs> m_DialogEvent
             = new EventHandlerCollection<CefDialogEventArgs>();
 
+        private StateTaskSource m_BrowserInitState = new StateTaskSource();
+        private StateTaskSource m_BrowserLoadingState = new StateTaskSource();
+        private StateTaskSource m_BrowserJSObjectState = new StateTaskSource();
+        private StateTaskSource<string> m_RegistrationReady = new StateTaskSource<string>();
+        private Dictionary<string, object> m_JSObjects = new Dictionary<string, object>();
+
+        /// <summary>
+        /// 매 페이지 로딩시마다 주입되는 코드입니다.
+        /// 페이지 로드가 완료되고, 스크립팅 준비가 끝나면 
+        /// 브라우져 내에서 __cefScreenRd 값을 true로 설정하고,
+        /// __cefScreenCb 함수를 실행합니다.
+        /// 
+        /// 즉, 사용자는 __cefScreenRd 값이 true가 아닐 때, 
+        /// __cefScreenCb 콜백을 설정함으로서 로딩 완료 여부를 추적할 수 있습니다.
+        /// 
+        /// 또, window.close 함수의 실제 동작을 "제거"합니다.
+        /// </summary>
+        private static readonly string SCRIPT_InvokeCallback 
+            = "window.__cefScreenRd = true;" +
+            "window.close = function() { };" +
+            "if (window.__cefScreenCb != undefined) {" +
+            "window.__cefScreenCb();" +
+            "}";
+
+        private static readonly string SCRIPT_InvokeInvisible
+            = "window.__cefVisible = false;" +
+            "if (window.__cefVisibleCb != undefined) {" +
+            "window.__cefVisibleCb(false);" +
+            "}";
+
+        private static readonly string SCRIPT_InvokeVisible
+            = "window.__cefVisible = true;" +
+            "if (window.__cefVisibleCb != undefined) {" +
+            "window.__cefVisibleCb(true);" +
+            "}";
+
         /// <summary>
         /// Cef Screen을 초기화합니다.
         /// </summary>
         public CefScreen()
         {
+            Router = new InterfaceRouter();
             (m_Timer = new Timer() { Interval = 100 })
                 .Tick += (X, Y) =>
                 {
@@ -40,6 +78,16 @@ namespace OpenTalk.UI.CefUnity
 
             m_Timer.Start();
         }
+
+        /// <summary>
+        /// 스크린 식별자입니다.
+        /// </summary>
+        internal string ScreenId { get; set; }
+
+        /// <summary>
+        /// 인터페이스 라우터입니다.
+        /// </summary>
+        public InterfaceRouter Router { get; private set; }
 
         /// <summary>
         /// 이 스크린에 보조 컨트롤이 부착될 때 마다 브라우져 컨트롤을 뒤로 옮깁니다.
@@ -105,186 +153,270 @@ namespace OpenTalk.UI.CefUnity
         {
             lock (this)
             {
-                if (m_Browser.IsNull() &&
-                    !IsReallyDesignMode())
-                {
-                    m_Browser = new ChromiumWebBrowser(
-                        new CefSharp.Web.HtmlString(""))
-                    {
-                        Dock = DockStyle.Fill
-                    };
-
-                    OnPreConfigureCef(m_Browser.BrowserSettings);
-                    OnConfigureCef(m_Browser.BrowserSettings);
-                    OnPostConfigureCef(m_Browser.BrowserSettings);
-
-                    /*
-                        디버깅시엔, 보안 설정이 고정됩니다.
-                     */
-                    if (!Debugger.IsAttached)
-                    {
-                        m_Browser.BrowserSettings.WebSecurity = CefState.Enabled;
-                        m_Browser.BrowserSettings.ApplicationCache = CefState.Disabled;
-                    }
-
-                    m_Browser.JsDialogHandler = new JsDialogHandler(this);
-
-                    // 컨트롤을 추가합니다.
-                    Controls.Add(m_Browser);
-                    
-                    // 브라우저 컨트롤을 맨 뒤로 보냅니다.
-                    while (true)
-                    {
-                        int Index = Controls.GetChildIndex(m_Browser);
-
-                        if (Index < 0)
-                            break;
-
-                        if (Index != Controls.Count - 1)
-                            m_Browser.SendToBack();
-
-                        else break;
-                    }
-                }
+                m_TickAction = InitializeBrowserInstanceAsync;
             }
 
             base.OnLoad(e);
         }
 
         /// <summary>
-        /// 자바스크립트 다이얼로그 핸들러를 커스터마이징합니다.
+        /// 브라우져 인스턴스를 비동기적으로 초기화합니다.
         /// </summary>
-        private class JsDialogHandler : IJsDialogHandler
+        private void InitializeBrowserInstanceAsync()
         {
-            private CefScreen m_Master;
+            CefComponent cefComponent = CefComponent.GetCEFComponent();
 
-            /// <summary>
-            /// 커스텀 핸들러를 초기화합니다.
-            /// </summary>
-            /// <param name="master"></param>
-            public JsDialogHandler(CefScreen master) => m_Master = master;
-
-            /// <summary>
-            /// 정말 페이지를 이탈하시겠습니까? 다이얼로그.
-            /// </summary>
-            /// <param name="chromiumWebBrowser"></param>
-            /// <param name="browser"></param>
-            /// <param name="messageText"></param>
-            /// <param name="isReload"></param>
-            /// <param name="callback"></param>
-            /// <returns></returns>
-            public bool OnBeforeUnloadDialog(IWebBrowser chromiumWebBrowser, IBrowser browser,
-                string messageText, bool isReload, IJsDialogCallback callback)
+            if (cefComponent.IsNotNull())
             {
-                if (!m_Master.m_DialogEvent.Broadcast(m_Master,
-                    new CefDialogEventArgs(m_Master, CefDialogType.Confirm,
-                    callback, messageText)))
+                if (m_Browser.IsNull() && !IsReallyDesignMode() &&
+                    cefComponent.RegisterScreen(this))
                 {
-                    Form Form = m_Master.GetParent<Form>();
-                    DialogResult Result = DialogResult.Yes;
-                    string Title = "CefScreen";
+                    InitializeBrowserInstance();
 
-                    if (Form.IsNotNull())
-                        Title = Form.Text;
-
-                    Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
-                        Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
-                        .WaitResult();
-
-                    if (Result == DialogResult.Yes)
-                        callback.Continue(true);
-
-                    else callback.Continue(false);
+                    lock (this)
+                    {
+                        m_TickAction = null;
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 이 컨트롤이 파괴될 때 스크린을 등록 해제합니다.
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            CefComponent cefComponent = GetCEFComponent(null, false);
+
+            if (disposing && cefComponent.IsNotNull())
+                cefComponent.UnregisterScreen(this);
+
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// 스크린이 등록되면 실행되는 메서드입니다.
+        /// </summary>
+        /// <param name="screenId"></param>
+        internal void OnScreenRegistered(string screenId)
+            => m_RegistrationReady.Set(ScreenId = screenId);
+
+        /// <summary>
+        /// 스크린이 등록 해제되면 실행되는 메서드입니다.
+        /// </summary>
+        internal void OnScreenUnregistered()
+        {
+            m_RegistrationReady.Unset();
+            ScreenId = null;
+        }
+
+        /// <summary>
+        /// 지정된 인터페이스를 로드하고,
+        /// 로딩이 시작되면 완료되는 작업을 반환합니다.
+        /// 단, 그 성공/실패 여부는 추적할 수 없습니다.
+        /// </summary>
+        /// <param name="InterfaceId"></param>
+        public Task LoadInterface(string InterfaceId)
+        {
+            Task Task = new CombinedTaskSource<object>(
+                () =>
+                {
+                    Application.Tasks.Invoke(
+                        () => m_Browser.Load(string.Format("otk://" + ScreenId + "/" + InterfaceId))
+                    ).Wait();
+
+                    return this;
+                },
+                m_BrowserInitState.Task, m_BrowserLoadingState.Task,
+                m_RegistrationReady.Task).Task;
+
+            return Task;
+        }
+
+        /// <summary>
+        /// 지정된 객체를 자바스크립트 객체로 바인드시킵니다.
+        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
+        /// </summary>
+        /// <param name="ObjectName"></param>
+        /// <param name="Object"></param>
+        /// <returns></returns>
+        public Task<bool> Bind(string ObjectName, object Object)
+        {
+            return m_BrowserJSObjectState.Task.ContinueOnMessageLoop((X) =>
+            {
+                lock (m_JSObjects)
+                {
+                    if (m_JSObjects.ContainsKey(ObjectName))
+                        return false;
+
+                    m_JSObjects.Add(ObjectName, Object);
+                }
+
+                ExecuteScript(string.Format(
+                    "if (window.__cefBindCb != undefined) {" +
+                    "window.__cefBindCb(\"{0}\", \"BIND\");" +
+                    "}", ObjectName));
 
                 return true;
-            }
+            });
+        }
 
-            /// <summary>
-            /// 자바스크립트 다이얼로그를 요청합니다.
-            /// </summary>
-            /// <param name="chromiumWebBrowser"></param>
-            /// <param name="browser"></param>
-            /// <param name="originUrl"></param>
-            /// <param name="dialogType"></param>
-            /// <param name="messageText"></param>
-            /// <param name="defaultPromptText"></param>
-            /// <param name="callback"></param>
-            /// <param name="suppressMessage"></param>
-            /// <returns></returns>
-            public bool OnJSDialog(IWebBrowser a, IBrowser b, string c,
-                CefJsDialogType dialogType, string messageText, string defaultPromptText, 
-                IJsDialogCallback callback, ref bool d)
+        /// <summary>
+        /// 지정된 객체 바인딩을 제거합니다.
+        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
+        /// </summary>
+        /// <param name="ObjectName"></param>
+        /// <param name="Object"></param>
+        /// <returns></returns>
+        public Task<bool> Unbind(string ObjectName, object Object)
+        {
+            return m_BrowserJSObjectState.Task.ContinueOnMessageLoop((X) =>
             {
-                CefDialogType requestType = CefDialogType.Alert;
-
-                switch (dialogType)
+                lock (m_JSObjects)
                 {
-                    case CefJsDialogType.Alert:
-                        requestType = CefDialogType.Alert;
-                        break;
+                    if (m_JSObjects.ContainsKey(ObjectName))
+                        return false;
 
-                    case CefJsDialogType.Confirm:
-                        requestType = CefDialogType.Confirm;
-                        break;
-
-                    case CefJsDialogType.Prompt:
-                        requestType = CefDialogType.Prompt;
-                        break;
-
-                    default:
-                        break;
+                    m_JSObjects.Add(ObjectName, Object);
                 }
 
-                if (string.IsNullOrEmpty(defaultPromptText) ||
-                    string.IsNullOrWhiteSpace(defaultPromptText))
-                    defaultPromptText = null;
+                ExecuteScript(string.Format(
+                    "if (window.__cefBindCb != undefined) {" +
+                    "window.__cefBindCb(\"{0}\", \"UNBIND\");" +
+                    "}", ObjectName));
 
-                if (!m_Master.m_DialogEvent.Broadcast(m_Master,
-                    new CefDialogEventArgs(m_Master, requestType,
-                    callback, messageText, defaultPromptText)))
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// 지정된 자바스크립트를 브라우져 내에서 실행시킵니다.
+        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
+        /// </summary>
+        /// <param name="Scripts"></param>
+        /// <returns></returns>
+        public Task ExecuteScript(string Scripts)
+        {
+            return m_BrowserLoadingState.Task.ContinueOnMessageLoop(
+                (X) => m_Browser.ExecuteScriptAsync(Scripts));
+        }
+
+        /// <summary>
+        /// 지정된 자바스크립트 함수를 브라우져 내에서 실행시킵니다.
+        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
+        /// </summary>
+        /// <param name="Scripts"></param>
+        /// <returns></returns>
+        public Task ExecuteScript(string Function, params object[] Arguments)
+        {
+            return m_BrowserLoadingState.Task.ContinueOnMessageLoop(
+                (X) => m_Browser.ExecuteScriptAsync(Function, Arguments));
+        }
+
+        /// <summary>
+        /// CEF 브라우져 인스턴스를 초기화시킵니다.
+        /// </summary>
+        private void InitializeBrowserInstance()
+        {
+            m_Browser = new ChromiumWebBrowser("otk://" + ScreenId + "/")
+            {
+                Dock = DockStyle.Fill
+            };
+
+            OnPreConfigureCef(m_Browser.BrowserSettings);
+            OnConfigureCef(m_Browser.BrowserSettings);
+            OnPostConfigureCef(m_Browser.BrowserSettings);
+
+            /*
+                디버깅시엔, 보안 설정이 고정됩니다.
+             */
+            if (!Debugger.IsAttached)
+            {
+                m_Browser.BrowserSettings.WebSecurity = CefState.Enabled;
+                m_Browser.BrowserSettings.ApplicationCache = CefState.Disabled;
+            }
+
+            m_Browser.JsDialogHandler = new JsDialogHandler(this);
+
+            // 브라우져의 초기화 상태를 Task 객체화 합니다.
+            m_Browser.IsBrowserInitializedChanged += (X, Y) =>
+            {
+                if (m_Browser.IsBrowserInitialized)
+                    m_BrowserInitState.Set(m_Browser);
+
+                else m_BrowserInitState.Unset();
+            };
+
+            // 메인 프레임 로드 시작/종료 이벤트를 Task 객체화합니다.
+            m_Browser.FrameLoadStart += (X, Y) =>
+            {
+                if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
                 {
-                    Form Form = m_Master.GetParent<Form>();
-                    DialogResult Result = DialogResult.Yes;
-                    string Title = "CefScreen";
-                    
-                    if (Form.IsNotNull())
-                        Title = Form.Text;
+                    m_BrowserLoadingState.Unset();
+                    m_BrowserJSObjectState.Unset();
+                }
+            };
 
-                    switch (dialogType)
+            m_Browser.FrameLoadEnd += (X, Y) =>
+            {
+                if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
+                {
+                    if (SCRIPT_InvokeCallback.Length > 0)
                     {
-                        case CefJsDialogType.Alert:
-                            Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
-                                Title, MessageBoxButtons.OK, MessageBoxIcon.Question))
-                                .WaitResult();
-                            break;
-
-                        case CefJsDialogType.Confirm:
-                            Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
-                                Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
-                                .WaitResult();
-                            break;
-
-                        case CefJsDialogType.Prompt:
-                            Result = DialogResult.No;
-                            break;
-
-                        default:
-                            break;
+                        m_Browser.ExecuteScriptAsync(SCRIPT_InvokeCallback);
+                        m_Browser.ExecuteScriptAsync(Visible ? SCRIPT_InvokeVisible : SCRIPT_InvokeInvisible);
                     }
 
-                    if (Result == DialogResult.Yes ||
-                        Result == DialogResult.OK)
-                        callback.Continue(true);
+                    m_BrowserLoadingState.Set(m_Browser);
+                    m_BrowserJSObjectState.Set(true);
 
-                    else callback.Continue(false);
+                    try
+                    {
+                        if (Debugger.IsAttached)
+                            m_Browser.ShowDevTools();
+                    }
+                    catch { }
                 }
+            };
 
-                return true;
+            m_Browser.JavascriptObjectRepository.ResolveObject += OnResolveJSObject;
+            //m_Browser.life
+
+            // 컨트롤을 추가합니다.
+            Controls.Add(m_Browser);
+
+            // 브라우저 컨트롤을 맨 뒤로 보냅니다.
+            while (true)
+            {
+                int Index = Controls.GetChildIndex(m_Browser);
+
+                if (Index < 0)
+                    break;
+
+                if (Index != Controls.Count - 1)
+                    m_Browser.SendToBack();
+
+                else break;
             }
+        }
 
-            public void OnDialogClosed(IWebBrowser chromiumWebBrowser, IBrowser browser) { }
-            public void OnResetDialogState(IWebBrowser chromiumWebBrowser, IBrowser browser) { }
+        /// <summary>
+        /// 자바스크립트 객체를 바인딩 해야 할 때 실행되는 메서드입니다.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnResolveJSObject(object sender, CefSharp.Event.JavascriptBindingEventArgs e)
+        {
+            m_BrowserJSObjectState.Set(true);
+
+            lock (m_JSObjects)
+            {
+                if (m_JSObjects.ContainsKey(e.ObjectName))
+                {
+                    e.ObjectRepository.Register(e.ObjectName, m_JSObjects[e.ObjectName], true);
+                }
+            }
         }
 
         /// <summary>
@@ -328,11 +460,94 @@ namespace OpenTalk.UI.CefUnity
         }
 
         /// <summary>
+        /// HTML UI 렌더링 요청을 받으면 실행됩니다.
+        /// </summary>
+        /// <param name="Request"></param>
+        internal Task HandleRequestAsync(OtkSchemeHandler Context, IRequest Request)
+        {
+            return Task.Run(() => {
+                CefContent Content = null;
+                CefContentRenderer Renderer = null;
+                string QueryString = "";
+
+                string RequestedUri = Request.Url.Substring(
+                    OtkSchemeHandler.m_Scheme.Length).Split(new char[] { '/' }, 2)[1];
+
+
+                if (RequestedUri.Contains("?"))
+                {
+                    int Offset = RequestedUri.IndexOf('?');
+
+                    QueryString = Offset > 0 ? RequestedUri.Substring(Offset + 1).Trim() : null;
+                    RequestedUri = Uri.UnescapeDataString(RequestedUri.Substring(0, Offset)).Trim();
+                }
+
+                Renderer = Router.Route(this, RequestedUri);
+                if (Renderer != null)
+                {
+                    string Method = (Request.Method != null ? Request.Method : "GET").ToUpper();
+                    
+                    if (Method != "POST" && Method != "PUT")
+                    {
+                        Dictionary<string, byte[]> FormData
+                            = new Dictionary<string, byte[]>();
+
+                        if (Request.PostData != null)
+                        {
+                            foreach(var Data in Request.PostData.Elements)
+                            {
+                                if (Data.File != null)
+                                    FormData[Data.File] = Data.Bytes;
+                            }
+                        }
+                        
+                        Content = Renderer.Render(
+                            Method, QueryString, FormData, Method == "GET",
+                            Request.Flags.HasFlag(UrlRequestFlags.OnlyFromCache));
+                    }
+
+                    else Content = Renderer.Render(Method, QueryString, 
+                        Method == "GET", Request.Flags.HasFlag(UrlRequestFlags.OnlyFromCache));
+                }
+
+                PutContentToContext(Context, Content != null ? 
+                    Content : CefContentRenderer.MakeError());
+            });
+        }
+
+        /// <summary>
+        /// 그런 컨텐트 없음.
+        /// </summary>
+        /// <param name="Context"></param>
+        /// <param name="Content"></param>
+        private static void PutContentToContext(OtkSchemeHandler Context, CefContent Content)
+        {
+            Context.StatusCode = Content.StatusCode;
+            Context.StatusText = Content.StatusMessage;
+
+            if (Content.Charset != null)
+                Context.Charset = Content.Charset.WebName;
+
+            Context.MimeType = Content.MimeType;
+            Context.Stream = Content.Content;
+
+            Context.AutoDisposeStream = !Content.NoDisposeContent;
+
+            if (Content.Headers != null &&
+                Content.Headers.Length > 0)
+            {
+                foreach (var Header in Content.Headers)
+                    Context.Headers.Set(Header.Key, Header.Value);
+            }
+        }
+
+        /// <summary>
         /// 이 CEF 스크린이 보여지게 되면 실행됩니다.
         /// </summary>
         /// <param name="e"></param>
         protected override void OnNowVisible(EventArgs e)
         {
+            ExecuteScript(SCRIPT_InvokeVisible);
             base.OnNowVisible(e);
         }
 
@@ -342,6 +557,7 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnNowInvisible(EventArgs e)
         {
+            ExecuteScript(SCRIPT_InvokeInvisible);
             base.OnNowInvisible(e);
         }
     }

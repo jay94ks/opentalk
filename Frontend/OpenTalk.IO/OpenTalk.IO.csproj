@@ -57,7 +57,9 @@
     <Compile Include="IO\IOWorker.cs" />
     <Compile Include="IO\IReadInterface.cs" />
     <Compile Include="IO\IWriteInterface.cs" />
+    <Compile Include="IO\VoidStream.cs" />
     <Compile Include="IO\PosixStyles.cs" />
+    <Compile Include="IO\RandomStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

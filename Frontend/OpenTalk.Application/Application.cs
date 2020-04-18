@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DApp = System.Windows.Forms.Application;
+using DRandom = System.Random;
 
 namespace OpenTalk
 {
     public abstract partial class Application
     {
+        private static DRandom m_Randomizer = new DRandom((int)DateTime.Now.Ticks);
+
         private Context m_Context;
         private List<Component> m_Components;
 

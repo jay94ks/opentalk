@@ -70,8 +70,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\CefUnity\CEFComponent.cs" />
+    <Compile Include="UI\CefUnity\CefComponent.cs" />
+    <Compile Include="UI\CefUnity\CefComponent.OtkSchemeHandler.cs" />
+    <Compile Include="UI\CefUnity\CefComponent.OtkSchemeHandlerFactory.cs" />
+    <Compile Include="UI\CefUnity\CefContentRenderer.cs" />
+    <Compile Include="UI\CefUnity\CefContent.cs" />
+    <Compile Include="UI\CefUnity\CefDialogEventArgs.cs" />
+    <Compile Include="UI\CefUnity\CefEventArgs.cs" />
     <Compile Include="UI\CefUnity\CefScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\CefUnity\CefScreen.InterfaceRouter.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\CefUnity\CefScreen.JsDialogHandler.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\Extensions\ControlActs.cs" />
@@ -110,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="UI\Forms\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -11,17 +11,19 @@ using System.Threading.Tasks;
 
 namespace OpenTalk.UI.CefUnity
 {
-    public class CEFComponent : Application.Component
+    public partial class CefComponent : Application.Component
     {
         private CefSettings m_Settings;
         private static int m_ActivationCounter = 0;
         private static object m_Synchronization = new object();
+        private Dictionary<string, CefScreen> m_CefScreens
+            = new Dictionary<string, CefScreen>();
 
         /// <summary>
         /// CefSharp 연동 컴포넌트를 초기화합니다.
         /// </summary>
-        public CEFComponent() : this(null) { }
-        public CEFComponent(Application application)
+        public CefComponent() : this(null) { }
+        public CefComponent(Application application)
             : base(application)
         {
             m_Settings = new CefSettings();
@@ -34,6 +36,14 @@ namespace OpenTalk.UI.CefUnity
             m_Settings.UserDataPath = Path.Combine(
                 Application.Environments.UserDataPath,
                 "CEF");
+
+            m_Settings.RegisterScheme(new CefCustomScheme()
+            {
+                IsLocal = false,
+                IsCorsEnabled = true,
+                SchemeName = OtkSchemeHandlerFactory.SchemeName,
+                SchemeHandlerFactory = new OtkSchemeHandlerFactory(this)
+            });
 
             // 디버거가 붙어있지 않으면 로깅 자체를 꺼버립니다.
             if (!Debugger.IsAttached)
@@ -50,7 +60,7 @@ namespace OpenTalk.UI.CefUnity
         /// </summary>
         /// <param name="application"></param>
         /// <returns></returns>
-        public static CEFComponent GetCEFComponent(Application application = null, bool allowCreate = true)
+        public static CefComponent GetCEFComponent(Application application = null, bool allowCreate = true)
         {
             application = application != null ? 
                 application : Application.RunningInstance;
@@ -59,10 +69,10 @@ namespace OpenTalk.UI.CefUnity
             {
                 lock (application)
                 {
-                    CEFComponent component = application.GetComponent<CEFComponent>();
+                    CefComponent component = application.GetComponent<CefComponent>();
 
                     if (component == null)
-                        component = new CEFComponent(application);
+                        (component = new CefComponent(application)).Activate();
 
                     return component;
                 }
@@ -96,6 +106,9 @@ namespace OpenTalk.UI.CefUnity
             base.OnActivated();
         }
 
+        /// <summary>
+        /// CEF 컴포넌트가 비활성화될 때 CEF를 종료시킵니다.
+        /// </summary>
         protected override void OnDeactivated()
         {
             Application.Tasks.Invoke(
@@ -113,6 +126,50 @@ namespace OpenTalk.UI.CefUnity
                 }).Wait();
 
             base.OnDeactivated();
+        }
+
+        /// <summary>
+        /// CefScreen을 등록합니다.
+        /// 등록된 CefScreen들은 otk://[SCREEN-ID]/[INTERFACE_ID] 형식으로 
+        /// UI 렌더링을 수행할 수 있습니다.
+        /// </summary>
+        /// <param name="cefScreen"></param>
+        internal bool RegisterScreen(CefScreen cefScreen)
+        {
+            lock(m_CefScreens)
+            {
+                if (m_CefScreens.ContainsValue(cefScreen))
+                    return false;
+
+                while (true)
+                {
+                    string ScreenId = Application.Random.MakeString(32, false);
+
+                    if (m_CefScreens.ContainsKey(ScreenId))
+                        continue;
+
+                    m_CefScreens.Add(ScreenId, cefScreen);
+                    cefScreen.OnScreenRegistered(ScreenId);
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        internal bool UnregisterScreen(CefScreen cefScreen)
+        {
+            lock (m_CefScreens)
+            {
+                if (cefScreen.ScreenId.IsNull() ||
+                    !m_CefScreens.ContainsKey(cefScreen.ScreenId))
+                    return false;
+
+                m_CefScreens.Remove(cefScreen.ScreenId);
+                cefScreen.OnScreenUnregistered();
+            }
+
+            return true;
         }
     }
 }

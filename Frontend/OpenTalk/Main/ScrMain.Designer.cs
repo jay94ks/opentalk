@@ -28,13 +28,23 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.cefScreen = new OpenTalk.UI.CefUnity.CefScreen();
             this.SuspendLayout();
+            // 
+            // cefScreen
+            // 
+            this.cefScreen.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cefScreen.Location = new System.Drawing.Point(0, 0);
+            this.cefScreen.Name = "cefScreen";
+            this.cefScreen.Size = new System.Drawing.Size(478, 552);
+            this.cefScreen.TabIndex = 0;
             // 
             // ScrMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.cefScreen);
             this.Name = "ScrMain";
             this.Size = new System.Drawing.Size(478, 552);
             this.ResumeLayout(false);
@@ -42,5 +52,7 @@
         }
 
         #endregion
+
+        private UI.CefUnity.CefScreen cefScreen;
     }
 }
