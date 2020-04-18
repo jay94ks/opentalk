@@ -35,7 +35,8 @@ namespace OpenTalk.Net.Textile
         /// 두번째 문자열은 데이터 본문입니다.
         /// </summary>
         private Queue<string> m_Receives;
-        private Dictionary<string, Action<TextileClient, Message>> m_Handlers;
+        private Queue<Message> m_Sends;
+        private bool m_WriteReady;
 
         /*
          * 암호화 키의 패턴이 발각되는 것을 방지하기 위해서,
@@ -66,16 +67,19 @@ namespace OpenTalk.Net.Textile
             m_Client = Client;
 
             m_Receives = new Queue<string>();
-            m_Handlers = new Dictionary<string, Action<TextileClient, Message>>();
+            m_Sends = new Queue<Message>();
 
             ArmEncryptionKey();
             m_DecryptOffset = m_EncryptOffset = 0;
 
             m_Client.ReadReady += OnReadReady;
+            m_Client.WriteReady += OnWriteReady;
             m_Client.Closed += OnClosed;
 
             m_State = TextileState.Handshaking;
             OnReady(m_Client, null);
+
+            m_WriteReady = false;
         }
 
         /// <summary>
@@ -122,9 +126,109 @@ namespace OpenTalk.Net.Textile
         public event Action<TextileClient, TextileState> StateChanged;
 
         /// <summary>
-        /// 이 소켓에 수신된 메시지가 있으면 실행되는 이벤트입니다.
+        /// 즉시 송신이 가능한 상태인지 확인합니다.
         /// </summary>
-        public event Action<TextileClient, int> MessageReady;
+        public bool CanSendImmediately => this.Locked(() => State == TextileState.Ready);
+
+        /// <summary>
+        /// 수신 대기열에 메시지가 있는지 검사합니다.
+        /// </summary>
+        public bool HasReceivePending => m_Receives.Locked(() => m_Receives.Count / 2 > 0);
+
+        /// <summary>
+        /// 수신 대기중인 메시지가 있으면 실행되는 이벤트입니다.
+        /// </summary>
+        public event Action<TextileClient, int> ReceiveReady;
+
+        /// <summary>
+        /// 메시지를 송신합니다.
+        /// 반환값이 false일 때, 연결이 끊어진 상태를 의미합니다.
+        /// </summary>
+        /// <param name="Message"></param>
+        /// <returns></returns>
+        public bool Send(Message Message)
+        {
+            lock (m_Sends)
+            {
+                lock (this)
+                {
+                    // 접속 중 혹은 접속 됨 상태가 아니면
+                    // 모두 오류 처리 합니다.
+                    if (State != TextileState.Ready &&
+                        State != TextileState.Handshaking)
+                    {
+                        return false;
+                    }
+
+                    m_Sends.Enqueue(Message);
+                    if (m_WriteReady)
+                        OnWriteReady(m_Client, -1);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 대기열에서 메시지를 수신합니다.
+        /// (어떤 경우에도 블로킹 되지 않습니다)
+        /// </summary>
+        /// <param name="Message"></param>
+        /// <returns></returns>
+        public bool Receive(ref Message Message)
+        {
+            lock (m_Receives)
+            {
+                if (HasReceivePending)
+                {
+                    Message.Label = m_Receives.Dequeue();
+                    Message.Data = m_Receives.Dequeue();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 수신된 모든 메시지를 콜백으로 처리합니다.
+        /// 메시지를 단 한개도 처리하지 못했을 때에만 false를 반환합니다.
+        /// </summary>
+        /// <param name="Callback"></param>
+        /// <returns></returns>
+        public bool Receive(Action<Message> Callback, Func<string, bool> Filter = null)
+        {
+            Message message = new Message();
+            int counter = 0;
+
+            lock (m_Receives)
+            {
+                while (true)
+                {
+                    if (Filter != null)
+                    {
+                        if (!Filter(m_Receives.Peek()))
+                            break;
+                    }
+
+                    if (Receive(ref message))
+                    {
+                        Callback?.Invoke(message);
+                        ++counter;
+                        continue;
+                    }
+
+                    break;
+                }
+            }
+
+            return counter > 0;
+        }
+
+        /// <summary>
+        /// 연결을 종료합니다.
+        /// </summary>
+        public bool Close() => m_Client.Close();
 
         /// <summary>
         /// 연결이 준비되면 실행되는 콜백입니다.
@@ -172,6 +276,12 @@ namespace OpenTalk.Net.Textile
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
         private void OnRefused(TcpClient socket, object arg2) => OnStateChanged(TextileState.Refused);
+
+        /// <summary>
+        /// 연결이 끊어지면 실행되는 이벤트입니다.
+        /// </summary>
+        /// <param name="obj"></param>
+        private void OnClosed(TcpClient obj) => OnStateChanged(TextileState.Disconnected);
 
         /// <summary>
         /// 수신 준비가 되면 실행되는 콜백입니다.
@@ -238,6 +348,70 @@ namespace OpenTalk.Net.Textile
         }
 
         /// <summary>
+        /// 송신이 가능한 상태가 되었을 때 실행되는 콜백입니다.
+        /// </summary>
+        /// <param name="Socket"></param>
+        /// <param name="arg2"></param>
+        private void OnWriteReady(IWriteInterface Socket, int arg2)
+        {
+            Message Message;
+            int Sents = 0;
+
+            // 핸드 쉐이크 단계에선 아무것도 송신하지 않습니다.
+            if (State != TextileState.Ready)
+                return;
+
+            while(true)
+            {
+                lock (m_Sends)
+                {
+                    if (m_Sends.Count <= 0)
+                        break;
+
+                    Sents++;
+                    Message = m_Sends.Dequeue();
+                }
+
+                EncryptAndSendMessage(Socket, Message);
+            }
+
+            lock (this)
+            {
+                if (Sents <= 0)
+                    m_WriteReady = true;
+
+                else m_WriteReady = false;
+            }
+        }
+
+        private void EncryptAndSendMessage(IWriteInterface Socket, Message Message)
+        {
+            byte[] LabelBytes = Encoding.GetBytes(Message.Label != null ? Message.Label : "");
+            byte[] DataBytes = Encoding.GetBytes(Message.Data != null ? Message.Data : "");
+
+            byte[] LabelLengthBytes = BitConverter.GetBytes(LabelBytes.Length);
+            byte[] DataLengthBytes = BitConverter.GetBytes(DataBytes.Length);
+
+            EncryptBytes(LabelLengthBytes, 0, LabelLengthBytes.Length);
+            Socket.Write(LabelLengthBytes, 0, LabelLengthBytes.Length);
+
+            if (LabelBytes.Length > 0)
+            {
+                EncryptBytes(LabelBytes, 0, LabelBytes.Length);
+                Socket.Write(LabelBytes, 0, LabelBytes.Length);
+            }
+
+            EncryptBytes(DataLengthBytes, 0, DataLengthBytes.Length);
+            Socket.Write(DataLengthBytes, 0, DataLengthBytes.Length);
+
+            if (DataBytes.Length > 0)
+            {
+                EncryptBytes(DataBytes, 0, DataBytes.Length);
+                Socket.Write(DataBytes, 0, DataBytes.Length);
+            }
+        }
+
+        /// <summary>
         /// 수신 큐에 수신된 메시지열들이 완성된게 있다면,
         /// 이벤트를 발생시킵니다.
         /// </summary>
@@ -245,26 +419,8 @@ namespace OpenTalk.Net.Textile
         {
             lock (m_Receives)
             {
-                while (m_Receives.Count / 2 > 0)
-                {
-                    string Label = m_Receives.Peek();
-                    lock (m_Handlers)
-                    {
-                        if (m_Handlers.ContainsKey(Label))
-                        {
-                            Message message = new Message();
-
-                            message.Label = m_Receives.Dequeue();
-                            message.Data = m_Receives.Dequeue();
-
-                            m_Handlers[Label]?.Invoke(this, message);
-                            Label = null;
-                        }
-                    }
-
-                    if (Label != null)
-                        MessageReady?.Invoke(this, m_Receives.Count / 2);
-                }
+                if (HasReceivePending)
+                    ReceiveReady?.Invoke(this, m_Receives.Count / 2);
             }
         }
 
@@ -325,16 +481,6 @@ namespace OpenTalk.Net.Textile
         }
 
         /// <summary>
-        /// 연결이 끊어지면 실행되는 이벤트입니다.
-        /// </summary>
-        /// <param name="obj"></param>
-        private void OnClosed(TcpClient obj)
-        {
-            OnStateChanged(TextileState.Disconnected);
-            m_Receives.Clear();
-        }
-
-        /// <summary>
         /// 상태가 변화하면 실행되는 메서드입니다.
         /// </summary>
         /// <param name="State"></param>
@@ -343,9 +489,23 @@ namespace OpenTalk.Net.Textile
             lock (this)
             {
                 m_State = State;
-            }
+                StateChanged?.Invoke(this, State);
 
-            StateChanged?.Invoke(this, State);
+                switch (State)
+                {
+                    case TextileState.Ready:
+                    case TextileState.Handshaking:
+                        break;
+
+                    default:
+                        m_Receives.Clear();
+                        m_Sends.Clear();
+
+                        m_DecodingBuffer?.Close();
+                        m_DecodingBuffer = null;
+                        return;
+                }
+            }
         }
 
         /// <summary>

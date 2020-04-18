@@ -43,6 +43,8 @@ namespace OpenTalk.Main
                 {
                     m_TxtIdentifier.Text = (Main.StoredCredential as TokenizedCredential).Identifier;
                     m_ChkAutoLogin.Checked = true;
+
+                    Main.BeginAuthenticate(Main.StoredCredential);
                 }
             }
 

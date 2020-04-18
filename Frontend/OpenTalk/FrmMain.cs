@@ -30,7 +30,10 @@ namespace OpenTalk
             m_TrayIcon.Icon = Icon;
             m_TrayIcon.Visible = true;
 
-            m_ScreenSwitcher.ScreenTypes = new Type[] { typeof(ScrMainLogin) };
+            m_ScreenSwitcher.ScreenTypes = new Type[] {
+                typeof(ScrMainLogin),
+                typeof(ScrMain)
+            };
 
             m_Session = Program.OTK.Session;
             m_Session.Authentication.Authenticated += OnAuthenticationChanged;
@@ -108,25 +111,10 @@ namespace OpenTalk
         /// <param name="e"></param>
         protected override void OnLoad(EventArgs e)
         {
-            Credential Credential = LoadAutoCredential();
+            LoadAutoCredential();
 
             // 로그인 화면을 보여줍니다.
             m_ScreenSwitcher.SwitchScreen(typeof(ScrMainLogin));
-
-            if (Credential != null)
-            {
-                if (Credential is GenericCredential)
-                {
-                    // 로그인 정보가 저장만 된 경우. (자동 로그인 아님)
-                }
-
-                else if (Credential is TokenizedCredential)
-                {
-                    // 자동 로그인 정보로 가공된 경우.
-                    BeginAuthenticate(Credential);
-                }
-            }
-
             base.OnLoad(e);
         }
 
@@ -293,6 +281,12 @@ namespace OpenTalk
                         ShowError("서버에서 예상치 못한 오류코드를 발송했습니다. 잠시후 다시 시도해주십시오.");
                         break;
                 }
+            }
+
+            else
+            {
+                // 인증에 성공하였습니다. --> 메인 화면으로 전환합니다.
+                m_ScreenSwitcher.SwitchScreen(typeof(ScrMain));
             }
         }
 

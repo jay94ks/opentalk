@@ -19,7 +19,7 @@ namespace OpenTalk.Server.Messages
         /// <returns></returns>
         public bool HandleMessage(Connection Connection, string Label, string Message)
         {
-            Connection.Kick();
+            Connection.Close();
             return false;
         }
     }

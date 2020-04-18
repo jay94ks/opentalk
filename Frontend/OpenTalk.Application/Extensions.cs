@@ -9,6 +9,22 @@ namespace OpenTalk
     public static class Extensions
     {
         /// <summary>
+        /// 지정된 객체의 유효성을 검사합니다.
+        /// Any.IsNotNull() 형태로 사용합니다.
+        /// </summary>
+        /// <param name="Any"></param>
+        /// <returns></returns>
+        public static bool IsNotNull(this object Any) => Any != null;
+
+        /// <summary>
+        /// 지정된 객체의 유효성을 검사합니다.
+        /// Any.IsNull() 형태로 사용합니다.
+        /// </summary>
+        /// <param name="Any"></param>
+        /// <returns></returns>
+        public static bool IsNull(this object Any) => Any == null;
+
+        /// <summary>
         /// 이 작업이 끝날때 까지 기다렸다가 그 결과를 획득합니다.
         /// </summary>
         /// <typeparam name="T"></typeparam>

@@ -22,6 +22,17 @@ namespace OpenTalk
             }
         }
 
+        public ComponentType GetComponent<ComponentType>()
+            where ComponentType : Component
+        {
+            Component component = GetComponent(typeof(ComponentType));
+
+            if (component != null)
+                return component as ComponentType;
+
+            return default(ComponentType);
+        }
+
         /// <summary>
         /// 지정된 타입의 컴포넌트가 이 어플리케이션에 존재하는지 검사합니다.
         /// </summary>
