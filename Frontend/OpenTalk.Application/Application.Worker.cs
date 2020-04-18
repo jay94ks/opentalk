@@ -111,10 +111,10 @@ namespace OpenTalk
                             살아 있지 않거나, 살아 있지 않게될 예정인 경우엔
                             죽은 걸로 취급합니다.
                          */
-                        return  m_Thread != null && 
-                                m_Thread.IsAlive &&
-                               !m_KeepRunning &&
-                               !m_ReallyRunning;
+                        return m_Thread != null && 
+                               m_Thread.IsAlive &&
+                               m_KeepRunning &&
+                               m_ReallyRunning;
                     }
                 }
             }

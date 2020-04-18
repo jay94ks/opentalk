@@ -338,6 +338,7 @@ namespace OpenTalk.UI.CefUnity
             }
 
             m_Browser.JsDialogHandler = new JsDialogHandler(this);
+            m_Browser.MenuHandler = new EmptyContextMenuHandler();
 
             // 브라우져의 초기화 상태를 Task 객체화 합니다.
             m_Browser.IsBrowserInitializedChanged += (X, Y) =>

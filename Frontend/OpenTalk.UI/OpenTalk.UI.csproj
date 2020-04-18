@@ -80,6 +80,9 @@
     <Compile Include="UI\CefUnity\CefScreen.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="UI\CefUnity\CefScreen.EmptyContextMenuHandler.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="UI\CefUnity\CefScreen.InterfaceRouter.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -32,7 +32,8 @@ namespace OpenTalk.Utilities
 
         ~StateTaskSource()
         {
-            m_TCS.SetCanceled();
+            if (!m_Set)
+                m_TCS.SetCanceled();
         }
 
         /// <summary>

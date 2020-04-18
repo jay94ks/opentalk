@@ -87,7 +87,8 @@ namespace OpenTalk.UI.CefUnity
         protected override void OnActivated()
         {
             Application.Tasks.Invoke(
-                () => {
+                () =>
+                {
                     lock (m_Synchronization)
                     {
                         if (m_ActivationCounter > 0)
@@ -101,7 +102,7 @@ namespace OpenTalk.UI.CefUnity
 
                     try { Cef.Initialize(m_Settings); }
                     catch { }
-                }).Wait();
+                });
 
             base.OnActivated();
         }
@@ -112,8 +113,9 @@ namespace OpenTalk.UI.CefUnity
         protected override void OnDeactivated()
         {
             Application.Tasks.Invoke(
-                () => {
-                    lock(m_Synchronization)
+                () =>
+                {
+                    lock (m_Synchronization)
                     {
                         m_ActivationCounter--;
 
@@ -123,7 +125,7 @@ namespace OpenTalk.UI.CefUnity
 
                     try { Cef.Shutdown(); }
                     catch { }
-                }).Wait();
+                });
 
             base.OnDeactivated();
         }
