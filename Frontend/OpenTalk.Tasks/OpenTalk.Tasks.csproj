@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{23179625-8A00-4131-B6CA-9666B8DFABD7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>OpenTalk</RootNamespace>
+    <AssemblyName>OpenTalk.Tasks</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helpers\ObjectPool.cs" />
+    <Compile Include="Helpers\TrickyManualEvent.cs" />
+    <Compile Include="Helpers\TrickyMessageLoop.cs" />
+    <Compile Include="Helpers\TrickyPollingLoop.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tasks\Future.cs" />
+    <Compile Include="Tasks\Future.Outfits.cs" />
+    <Compile Include="Tasks\FutureEventSource.cs" />
+    <Compile Include="Tasks\FutureConditionSource.cs" />
+    <Compile Include="Tasks\FutureImpossibleException.cs" />
+    <Compile Include="Tasks\FutureSource.cs" />
+    <Compile Include="Tasks\FutureSource.SourcedFuture.cs" />
+    <Compile Include="Tasks\FutureStatus.cs" />
+    <Compile Include="Tasks\IFutureSource.cs" />
+    <Compile Include="Tasks\Internals\ActionFuture.cs" />
+    <Compile Include="Tasks\Internals\DelayedFuture.cs" />
+    <Compile Include="Tasks\Internals\FaultedFuture.cs" />
+    <Compile Include="Tasks\Internals\ChainedFuture.cs" />
+    <Compile Include="Tasks\Internals\CanceledFuture.cs" />
+    <Compile Include="Tasks\Internals\ChainedFutureStatus.cs" />
+    <Compile Include="Tasks\Internals\CombinedFuture.cs" />
+    <Compile Include="Tasks\Internals\SucceedFuture.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Tasks\Future.Exteriors.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
