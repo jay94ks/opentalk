@@ -23,14 +23,13 @@ namespace OpenTalk.Tasks
         public static bool Cancel(this Future This) 
             => This == null || Future.Cancel(This);
 
-
         /// <summary>
         /// 이 작업이 취소되면 실행될 작업을 등록합니다.
         /// </summary>
         /// <param name="This"></param>
         /// <param name="Functor"></param>
         /// <returns></returns>
-        public static Future WhenCanceled(this Future This, Action<Future> Functor)
+        public static Future IfCanceled(this Future This, Action<Future> Functor)
         {
             if (This != null)
             {
@@ -46,12 +45,161 @@ namespace OpenTalk.Tasks
         }
 
         /// <summary>
+        /// 이 작업이 취소되면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future IfCanceled<PrevType>(this Future<PrevType> This, Action<Future<PrevType>> Functor)
+        {
+            if (This != null)
+            {
+                return Future.After(This, (X) =>
+                {
+                    if (X.IsCanceled)
+                        Functor(X);
+                });
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 취소되면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future<ResultType> IfCanceled<ResultType, PrevType>(
+            this Future<PrevType> This, Func<Future<PrevType>, ResultType> Functor)
+        {
+            if (This != null)
+            {
+                FutureSource<ResultType> NewFuture = new FutureSource<ResultType>();
+                Future ChainedFuture = null;
+
+                lock (This)
+                {
+                    // 취소 요청이 들어오면, 연계 작업을 실행하는 것 자체를 취소합니다.
+                    NewFuture.Canceled +=
+                        (X, Y) => ChainedFuture.Cancel();
+
+                    ChainedFuture = Future.After(This, (X) =>
+                    {
+                        if (X.IsCanceled)
+                        {
+                            try { NewFuture.TrySetCompleted(Functor(X)); }
+                            catch (Exception e)
+                            {
+                                NewFuture.TrySetFaulted(e);
+                                return;
+                            }
+                        }
+
+                        else NewFuture.TrySetCanceled();
+                    });
+                }
+
+                return NewFuture.Future;
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 성공하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future IfSuccessful(this Future This, Action<Future> Functor)
+        {
+            if (This != null)
+            {
+                return Future.After(This, (X) =>
+                {
+                    if (!X.IsFaulted && !X.IsCanceled)
+                        Functor(X);
+                });
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 성공하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future IfSuccessful<PrevType>(this Future<PrevType> This, Action<Future<PrevType>> Functor)
+        {
+            if (This != null)
+            {
+                return Future.After(This, (X) =>
+                {
+                    if (!X.IsFaulted && !X.IsCanceled)
+                        Functor(X);
+                });
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 성공하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future<ResultType> IfSuccessful<ResultType, PrevType>(
+            this Future<PrevType> This, Func<Future<PrevType>, ResultType> Functor)
+        {
+            if (This != null)
+            {
+                FutureSource<ResultType> NewFuture = new FutureSource<ResultType>();
+                Future ChainedFuture = null;
+
+                lock (This)
+                {
+                    // 취소 요청이 들어오면, 연계 작업을 실행하는 것 자체를 취소합니다.
+                    NewFuture.Canceled +=
+                        (X, Y) => ChainedFuture.Cancel();
+
+                    ChainedFuture = Future.After(This, (X) =>
+                    {
+                        if (!X.IsFaulted && !X.IsCanceled)
+                        {
+                            try { NewFuture.TrySetCompleted(Functor(X)); }
+                            catch (Exception e)
+                            {
+                                NewFuture.TrySetFaulted(e);
+                                return;
+                            }
+                        }
+
+                        else NewFuture.TrySetCanceled();
+                    });
+                }
+
+                return NewFuture.Future;
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
         /// 이 작업이 실패하면 실행될 작업을 등록합니다.
         /// </summary>
         /// <param name="This"></param>
         /// <param name="Functor"></param>
         /// <returns></returns>
-        public static Future WhenFaulted(this Future This, Action<Future> Functor)
+        public static Future IfFaulted(this Future This, Action<Future> Functor)
         {
             if (This != null)
             {
@@ -67,12 +215,76 @@ namespace OpenTalk.Tasks
         }
 
         /// <summary>
+        /// 이 작업이 실패하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future IfFaulted<PrevType>(this Future<PrevType> This, Action<Future<PrevType>> Functor)
+        {
+            if (This != null)
+            {
+                return Future.After(This, (X) =>
+                {
+                    if (X.IsFaulted)
+                        Functor(X);
+                });
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 실패하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future<ResultType> IfFaulted<ResultType, PrevType>(
+            this Future<PrevType> This, Func<Future<PrevType>, ResultType> Functor)
+        {
+            if (This != null)
+            {
+                FutureSource<ResultType> NewFuture = new FutureSource<ResultType>();
+                Future ChainedFuture = null;
+
+                lock (This)
+                {
+                    // 취소 요청이 들어오면, 연계 작업을 실행하는 것 자체를 취소합니다.
+                    NewFuture.Canceled +=
+                        (X, Y) => ChainedFuture.Cancel();
+
+                    ChainedFuture = Future.After(This, (X) =>
+                    {
+                        if (X.IsFaulted)
+                        {
+                            try { NewFuture.TrySetCompleted(Functor(X)); }
+                            catch (Exception e)
+                            {
+                                NewFuture.TrySetFaulted(e);
+                                return;
+                            }
+                        }
+
+                        else NewFuture.TrySetCanceled();
+                    });
+                }
+
+                return NewFuture.Future;
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
         /// 이 작업이 취소되거나 실패하면 실행될 작업을 등록합니다.
         /// </summary>
         /// <param name="This"></param>
         /// <param name="Functor"></param>
         /// <returns></returns>
-        public static Future WhenNegative(this Future This, Action<Future> Functor)
+        public static Future IfUnsuccessful(this Future This, Action<Future> Functor)
         {
             if (This != null)
             {
@@ -108,6 +320,93 @@ namespace OpenTalk.Tasks
 
             return Future.Run(() => Functor(
                 new FaultedFuture(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 취소되거나 실패하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future IfUnsuccessful<PrevType>(this Future<PrevType> This, Action<Future<PrevType>> Functor)
+        {
+            if (This != null)
+            {
+                FutureSource NewFuture = new FutureSource();
+                Future ChainedFuture = null;
+
+                lock (This)
+                {
+                    // 취소 요청이 들어오면, 연계 작업을 실행하는 것 자체를 취소합니다.
+                    NewFuture.Canceled +=
+                        (X, Y) => ChainedFuture.Cancel();
+
+                    ChainedFuture = Future.After(This, (X) =>
+                    {
+                        if (X.IsFaulted || X.IsCanceled)
+                        {
+                            try { Functor(X); }
+                            catch (Exception e)
+                            {
+                                NewFuture.TrySetFaulted(e);
+                                return;
+                            }
+
+                            NewFuture.TrySetCompleted();
+                        }
+
+                        else NewFuture.TrySetCanceled();
+                    });
+                }
+
+                return NewFuture.Future;
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
+        }
+
+        /// <summary>
+        /// 이 작업이 취소되거나 실패하면 실행될 작업을 등록합니다.
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future<ResultType> IfUnsuccessful<ResultType, PrevType>(
+            this Future<PrevType> This, Func<Future<PrevType>, ResultType> Functor)
+        {
+            if (This != null)
+            {
+                FutureSource<ResultType> NewFuture = new FutureSource<ResultType>();
+                Future ChainedFuture = null;
+
+                lock (This)
+                {
+                    // 취소 요청이 들어오면, 연계 작업을 실행하는 것 자체를 취소합니다.
+                    NewFuture.Canceled +=
+                        (X, Y) => ChainedFuture.Cancel();
+
+                    ChainedFuture = Future.After(This, (X) =>
+                    {
+                        if (X.IsFaulted || X.IsCanceled)
+                        {
+                            try { NewFuture.TrySetCompleted(Functor(X)); }
+                            catch (Exception e)
+                            {
+                                NewFuture.TrySetFaulted(e);
+                                return;
+                            }
+                        }
+
+                        else NewFuture.TrySetCanceled();
+                    });
+                }
+
+                return NewFuture.Future;
+            }
+
+            return Future.Run(() => Functor(
+                new FaultedFuture<PrevType>(new NullReferenceException())));
         }
 
         /// <summary>
