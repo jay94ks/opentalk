@@ -16,12 +16,14 @@ namespace OpenTalk.Tasks.Internals
     {
         private static FormTimer m_Timer = new FormTimer() { Interval = 10 };
         private static Queue<UIActionFuture> m_UIActions = new Queue<UIActionFuture>();
+        private static Thread m_CurrentThread = null;
 
         /// <summary>
         /// 타이머를 시작시킵니다.
         /// </summary>
         static UIActionFuture()
         {
+            m_CurrentThread = Thread.CurrentThread;
             m_Timer.Tick += OnTimerTick;
             m_Timer.Start();
         }
@@ -29,8 +31,9 @@ namespace OpenTalk.Tasks.Internals
         private static void OnTimerTick(object sender, EventArgs e)
         {
             UIActionFuture Action = null;
+            m_CurrentThread = Thread.CurrentThread;
 
-            while(true)
+            while (true)
             {
                 lock(m_UIActions)
                 {
@@ -63,8 +66,13 @@ namespace OpenTalk.Tasks.Internals
             m_Running = false;
             m_WannaCancel = false;
 
-            lock (m_UIActions)
-                m_UIActions.Enqueue(this);
+            if (m_CurrentThread != Thread.CurrentThread)
+            {
+                lock (m_UIActions)
+                    m_UIActions.Enqueue(this);
+            }
+
+            else Invoke();
         }
 
         /// <summary>

@@ -38,10 +38,10 @@
   <ItemGroup>
     <Compile Include="Helpers\ObjectPool.cs" />
     <Compile Include="Helpers\TrickyManualEvent.cs" />
-    <Compile Include="Helpers\TrickyMessageLoop.cs" />
     <Compile Include="Helpers\TrickyPollingLoop.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tasks\Future.cs" />
+    <Compile Include="Tasks\Future.Then.cs" />
     <Compile Include="Tasks\Future.Outfits.cs" />
     <Compile Include="Tasks\FutureEventSource.cs" />
     <Compile Include="Tasks\FutureConditionSource.cs" />
@@ -58,6 +58,7 @@
     <Compile Include="Tasks\Internals\ChainedFutureStatus.cs" />
     <Compile Include="Tasks\Internals\CombinedFuture.cs" />
     <Compile Include="Tasks\Internals\SucceedFuture.cs" />
+    <Compile Include="Tasks\Internals\UIActionFuture.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tasks\Future.Exteriors.cs" />

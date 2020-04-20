@@ -16,7 +16,7 @@ namespace OpenTalk.Tasks
         /// <summary>
         /// 작업 체인입니다. 상속받은 자식 클래스에선 절대 직접 접근할 수 없습니다.
         /// </summary>
-        private Queue<IChainedFuture> m_Chains = new Queue<IChainedFuture>();
+        internal Queue<IChainedFuture> m_Chains = new Queue<IChainedFuture>();
 
         /// <summary>
         /// 완료 여부를 확인합니다.
@@ -104,13 +104,36 @@ namespace OpenTalk.Tasks
 
             return false;
         }
+
+        /// <summary>
+        /// 닷넷 호환 태스크로 변환합니다.
+        /// </summary>
+        /// <returns></returns>
+        public Task ToTask()
+        {
+            TaskCompletionSource<object> TCS
+                = new TaskCompletionSource<object>();
+
+            this.Then((X) =>
+            {
+                if (X.IsCanceled)
+                    TCS.TrySetCanceled();
+
+                else if (X.IsFaulted)
+                    TCS.TrySetException(X.Exception);
+
+                else TCS.TrySetResult(null);
+            });
+
+            return TCS.Task;
+        }
     }
 
     /// <summary>
     /// 닷넷 Task보다 가벼운 Task를 구현합니다.
     /// </summary>
     /// <typeparam name="ResultType"></typeparam>
-    public abstract class Future<ResultType> : Future
+    public abstract partial class Future<ResultType> : Future
     {
         /// <summary>
         /// 작업의 결과를 확인합니다.
@@ -122,5 +145,28 @@ namespace OpenTalk.Tasks
         /// 이 속성에 접근하게되면 FutureImpossibleException 예외가 발생됩니다.
         /// </summary>
         public abstract ResultType Result { get; }
+
+        /// <summary>
+        /// 닷넷 호환 태스크로 변환합니다.
+        /// </summary>
+        /// <returns></returns>
+        public new Task<ResultType> ToTask()
+        {
+            TaskCompletionSource<ResultType> TCS
+                = new TaskCompletionSource<ResultType>();
+
+            this.Then((X) =>
+            {
+                if (X.IsCanceled)
+                    TCS.TrySetCanceled();
+
+                else if (X.IsFaulted)
+                    TCS.TrySetException(X.Exception);
+
+                else TCS.TrySetResult((X as Future<ResultType>).Result);
+            });
+
+            return TCS.Task;
+        }
     }
 }

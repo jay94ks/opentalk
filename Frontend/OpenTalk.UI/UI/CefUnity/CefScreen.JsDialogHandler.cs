@@ -44,7 +44,7 @@ namespace OpenTalk.UI.CefUnity
 
                     Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
                         Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
-                        .WaitResult();
+                        .Result;
 
                     if (Result == DialogResult.Yes)
                         callback.Continue(true);
@@ -111,13 +111,13 @@ namespace OpenTalk.UI.CefUnity
                         case CefJsDialogType.Alert:
                             Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
                                 Title, MessageBoxButtons.OK, MessageBoxIcon.Question))
-                                .WaitResult();
+                                .Result;
                             break;
 
                         case CefJsDialogType.Confirm:
                             Result = Application.Tasks.Invoke(() => MessageBox.Show(messageText,
                                 Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
-                                .WaitResult();
+                                .Result;
                             break;
 
                         case CefJsDialogType.Prompt:

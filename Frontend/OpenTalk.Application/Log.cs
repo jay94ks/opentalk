@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTalk.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +14,7 @@ namespace OpenTalk
         private static Queue<KeyValuePair<DateTime, string>> m_WritePendings
             = new Queue<KeyValuePair<DateTime, string>>();
 
-        /// <summary>
-        /// 작업자 인스턴스를 제공하는 TCS 객체입니다.
-        /// </summary>
-        private static TaskCompletionSource<Application.Worker> TCS
-            = new TaskCompletionSource<Application.Worker>();
-
+        private static Future m_TrickyWorker = null;
         private static bool m_AlwaysDirectOut = false;
 
         static Log()
@@ -29,36 +25,6 @@ namespace OpenTalk
                 m_Loggers.Add(new Console());
                 m_Loggers.Add(new File());
             }
-
-            Application.RunningInstanceReady.ContinueWith(
-                (X) => TCS.SetResult(new Application.Worker(X.Result, OnEachLoop)));
-
-            TCS.Task.ContinueWith((X) => {
-                X.Result.Stopped += OnWorkerExiting;
-                X.Result.Start();
-            });
-        }
-
-        /// <summary>
-        /// 작업자 인스턴스입니다.
-        /// </summary>
-        private static Application.Worker Worker => TCS.Task.WaitResult();
-
-        /// <summary>
-        /// 작업자 인스턴스가 종료되려고 하면 실행됩니다.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private static void OnWorkerExiting(object sender, Application.Worker.EventArgs e)
-        {
-            Thread.Yield();
-            lock (m_WritePendings)
-            {
-                m_AlwaysDirectOut = true;
-            }
-
-            Thread.Yield();
-            OnEachLoop();
         }
 
         /// <summary>
@@ -74,7 +40,10 @@ namespace OpenTalk
                 lock (m_WritePendings)
                 {
                     if (m_WritePendings.Count <= 0)
+                    {
+                        m_TrickyWorker = null;
                         break;
+                    }
 
                     var Item = m_WritePendings.Dequeue();
 
@@ -105,13 +74,17 @@ namespace OpenTalk
             string message = args.Length <= 0 ?
                 format : string.Format(format, args);
 
-            if (TCS.Task.IsCompleted && !m_AlwaysDirectOut)
+            if (!m_AlwaysDirectOut)
             {
                 lock (m_WritePendings)
                 {
                     m_WritePendings.Enqueue(
                         new KeyValuePair<DateTime, string>(
                             DateTime.Now, message));
+
+                    if (m_TrickyWorker == null ||
+                        m_TrickyWorker.IsCompleted)
+                        m_TrickyWorker = Future.Run(OnEachLoop);
                 }
             }
 

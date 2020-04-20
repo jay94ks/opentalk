@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTalk.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DApp = System.Windows.Forms.Application;
@@ -19,8 +20,6 @@ namespace OpenTalk
         public Application()
         {
             Events = new LifeCycle(this);
-            Workers = new NamedWorkers();
-
             m_Context = new Context(this);
             m_Components = new List<Component>();
         }
@@ -28,30 +27,18 @@ namespace OpenTalk
         /// <summary>
         /// g_RunningInstance 필드에 접근 할 때 보호 동작을 수행하는 락 객체입니다.
         /// </summary>
-        private static object g_SingletonLock = new object();
-        private static Application g_RunningInstance = null;
-        private static TaskCompletionSource<Application> g_RunningInstanceReady 
-            = new TaskCompletionSource<Application>();
+        private static FutureEventSource<Application> g_RunningInstanceFES
+            = new FutureEventSource<Application>();
 
         /// <summary>
         /// 현재 실행중인 어플리케이션 인스턴스를 획득합니다.
         /// </summary>
-        public static Application RunningInstance {
-            get {
-                lock (g_SingletonLock)
-                    return g_RunningInstance;
-            }
-        }
+        public static Application RunningInstance => g_RunningInstanceFES.Future.Result;
 
         /// <summary>
         /// 어플리케이션 인스턴스가 준비되면 완료되는 작업입니다.
         /// </summary>
-        public static Task<Application> RunningInstanceReady {
-            get {
-                lock(g_SingletonLock)
-                    return g_RunningInstanceReady.Task;
-            }
-        }
+        public static Future<Application> FutureInstance => g_RunningInstanceFES.Future;
 
         /// <summary>
         /// 어플리케이션 라이프사이클 이벤트들을 정의합니다.
@@ -64,37 +51,27 @@ namespace OpenTalk
         public string[] Arguments { get; private set; }
 
         /// <summary>
-        /// 이름있는 작업자 인스턴스들에 접근합니다.
-        /// </summary>
-        public NamedWorkers Workers { get; }
-
-        /// <summary>
         /// 어플리케이션 인스턴스를 실행시킵니다.
         /// 이미 실행중인 인스턴스가 있으면 ApplicationException 예외가 발생합니다.
         /// </summary>
         /// <param name="Instance"></param>
         public static void Run(Application Instance, params string[] Arguments)
         {
-            lock (g_SingletonLock)
+            //g_RunningInstanceFES
+            
+            lock (g_RunningInstanceFES)
             {
                 // 이미 실행중인 인스턴스가 있는 경우,
                 // ApplicationException 예외를 발생시킵니다.
-                if (g_RunningInstance != null)
+                if (g_RunningInstanceFES.Future.IsCompleted)
                     throw new ApplicationException();
 
-                g_RunningInstance = Instance;
+                Instance.Arguments = Arguments;
+                g_RunningInstanceFES.Set(Instance);
             }
 
-            Instance.Arguments = Arguments;
-
-            g_RunningInstanceReady.SetResult(Instance);
             Instance.m_Context.Run();
-
-            lock(g_SingletonLock)
-            {
-                // 인스턴스 상태 태스크를 리셋합니다.
-                g_RunningInstanceReady = new TaskCompletionSource<Application>();
-            }
+            g_RunningInstanceFES.Unset();
         }
 
         /// <summary>

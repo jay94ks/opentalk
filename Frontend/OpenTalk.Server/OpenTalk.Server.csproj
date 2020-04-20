@@ -131,6 +131,10 @@
       <Project>{92f44c6c-64ad-4e80-826a-3c2c725a8a85}</Project>
       <Name>OpenTalk.Net</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenTalk.Tasks\OpenTalk.Tasks.csproj">
+      <Project>{23179625-8a00-4131-b6ca-9666b8dfabd7}</Project>
+      <Name>OpenTalk.Tasks</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

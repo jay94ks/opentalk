@@ -4,6 +4,7 @@ using OpenTalk.Net;
 using OpenTalk.Net.Http;
 using OpenTalk.Server.Framework;
 using OpenTalk.Server.MySQLs;
+using OpenTalk.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,8 +19,6 @@ namespace OpenTalk.Server
     public class Program : Application
     {
         private IpcComponent m_Ipc;
-
-        private Worker[] m_Workers = null;
         private TcpListener[] m_Listeners = null;
 
         private List<Connection> m_Connections = new List<Connection>();
@@ -201,7 +200,7 @@ namespace OpenTalk.Server
                 return;
             }
 
-            PrepareWorkerInstances();
+            SetThreadPoolCapacity();
 
             Log.w("Connecting MySQL database...");
             try { (new MySQLComponent(this)).Activate(); }
@@ -275,6 +274,18 @@ namespace OpenTalk.Server
                     });
                 }
             }
+        }
+
+        private void SetThreadPoolCapacity()
+        {
+            int Workers, CompletionWorkers;
+
+            ThreadPool.GetMaxThreads(out Workers, out CompletionWorkers);
+
+            Workers = Math.Max(Workers, CommonSettings.WorkerInstances);
+            CompletionWorkers = Math.Max(CompletionWorkers, CommonSettings.WorkerInstances);
+
+            ThreadPool.SetMaxThreads(Workers, CompletionWorkers);
         }
 
         protected override void DeInitialize()
@@ -410,45 +421,9 @@ namespace OpenTalk.Server
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
-        public Task InvokeByWorker(Action action)
+        public Future InvokeByWorker(Action action)
         {
-            int index = 0;
-
-            lock(this)
-            {
-                // 초기화가 끝나지 않았다면, 작업자 쓰레드 대신,
-                // 메인 메시지 루프에서 작업을 처리합니다.
-                if (!m_InitializedAndReady)
-                    return Invoke(action);
-
-                index = m_WorkerRounds;
-                m_WorkerRounds = (m_WorkerRounds + 1) % m_Workers.Length;
-            }
-
-            return m_Workers[index].Invoke(action);
-        }
-
-        /// <summary>
-        /// 작업자 인스턴스들을 초기화합니다.
-        /// </summary>
-        private void PrepareWorkerInstances()
-        {
-            Log.w("Preparing worker instances...");
-            m_Workers = new Worker[CommonSettings.WorkerInstances];
-
-            for (int i = 0; i < m_Workers.Length; i++)
-            {
-                Log.w(" - Preparing worker instance #{0} of {1}.", i + 1, m_Workers.Length);
-                m_Workers[i] = new Worker(this);
-                m_Workers[i].Started += OnWorkerEvent;
-                m_Workers[i].Stopped += OnWorkerEvent;
-                m_Workers[i].QueueEvent += OnWorkerEvent;
-                m_Workers[i].UserState = i;
-            }
-
-            Log.w("Starting worker instances...");
-            for (int i = 0; i < m_Workers.Length; i++)
-                m_Workers[i].Start();
+            return Future.Run(action);
         }
 
         /// <summary>
@@ -528,34 +503,6 @@ namespace OpenTalk.Server
                 m_Connections.Add(connection);
         }
 
-        /// <summary>
-        /// 작업자 인스턴스의 상태가 변경되면 실행됩니다.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnWorkerEvent(object sender, Worker.EventArgs e)
-        {
-            int index = (int)e.Worker.UserState + 1;
-
-            switch(e.State)
-            {
-                case Worker.State.Started:
-                    Log.w("[Worker, #{0}] started and now ready.", index);
-                    break;
-
-                case Worker.State.Running:
-                    Log.w("[Worker, #{0}] is processing works.", index);
-                    break;
-
-                case Worker.State.Waiting:
-                    Log.w("[Worker, #{0}] is waiting works.", index);
-                    break;
-
-                case Worker.State.Stopped:
-                    Log.w("[Worker, #{0}] stopped.", index);
-                    break;
-            }
-        }
 
         /// <summary>
         /// IPC 메시지가 수신되면 실행됩니다.

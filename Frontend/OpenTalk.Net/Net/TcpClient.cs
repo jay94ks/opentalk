@@ -270,7 +270,7 @@ namespace OpenTalk.Net
             m_Connecting = false;
 
             // 이벤트를 발생시킵니다.
-            NetWorker.Worker.Invoke(() =>
+            NetWorker.Invoke(() =>
             {
                 this.Locked(() => RemoteAddress);
                 Ready?.Invoke(this, hint.State);
@@ -307,7 +307,7 @@ namespace OpenTalk.Net
             m_Connecting = false;
 
             // 이벤트를 발생시킵니다.
-            NetWorker.Worker.Invoke(() =>
+            NetWorker.Invoke(() =>
             {
                 this.Locked(() => RemoteAddress);
                 Ready?.Invoke(this, X.AsyncState);

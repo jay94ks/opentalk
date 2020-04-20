@@ -81,6 +81,8 @@ namespace OpenTalk.Tasks
             {
                 if (m_WasSet)
                 {
+                    m_Source.TrySetCanceled();
+
                     m_Source = new FutureSource();
                     FlagChanged = true;
                 }
@@ -108,6 +110,7 @@ namespace OpenTalk.Tasks
         public FutureEventSource()
         {
             m_Source = new FutureSource<ResultType>();
+            m_LatestResult = default(ResultType);
             m_NoResult = true;
             m_WasSet = false;
             Sender = this;
@@ -156,6 +159,7 @@ namespace OpenTalk.Tasks
                     m_Source = new FutureSource<ResultType>();
                 }
 
+                m_LatestResult = default(ResultType);
                 m_NoResult = true;
                 m_WasSet = true;
 
@@ -180,6 +184,7 @@ namespace OpenTalk.Tasks
                     m_Source = new FutureSource<ResultType>();
                 }
 
+                m_LatestResult = Result;
                 m_NoResult = false;
                 m_WasSet = true;
 
@@ -204,6 +209,7 @@ namespace OpenTalk.Tasks
                     FlagChanged = true;
                 }
 
+                m_LatestResult = default(ResultType);
                 m_NoResult = true;
                 m_WasSet = false;
 

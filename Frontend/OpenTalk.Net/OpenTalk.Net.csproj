@@ -81,6 +81,10 @@
       <Project>{BC1A0091-E30B-4626-9E31-3DBE8F0D1F2E}</Project>
       <Name>OpenTalk.IO</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenTalk.Tasks\OpenTalk.Tasks.csproj">
+      <Project>{23179625-8A00-4131-B6CA-9666B8DFABD7}</Project>
+      <Name>OpenTalk.Tasks</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

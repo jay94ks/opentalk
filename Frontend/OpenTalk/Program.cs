@@ -40,7 +40,7 @@ namespace OpenTalk
         /// <summary>
         /// 오픈톡 인스턴스입니다.
         /// </summary>
-        public static Program OTK => ((Program)RunningInstanceReady.WaitResult());
+        public static Program OTK => ((Program)FutureInstance.Result);
 
         /// <summary>
         /// 해당 응용 프로그램의 주 진입점입니다.

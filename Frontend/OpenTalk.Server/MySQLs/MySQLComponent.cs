@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using OpenTalk.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace OpenTalk.Server.MySQLs
         /// <param name="wannaWrite"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public static Task Perform(Application application, bool wannaWrite, Action<MySqlConnection> callback)
+        public static Future Perform(Application application, bool wannaWrite, Action<MySqlConnection> callback)
             => GetMySQLComponent(application).Perform(wannaWrite, callback);
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace OpenTalk.Server.MySQLs
         /// </summary>
         /// <param name="wannaWrite"></param>
         /// <param name="callback"></param>
-        public Task Perform(bool wannaWrite, Action<MySqlConnection> callback)
+        public Future Perform(bool wannaWrite, Action<MySqlConnection> callback)
         {
             return m_Server.InvokeByWorker(() =>
             {

@@ -148,6 +148,10 @@
       <Project>{2da87960-06c3-4424-a59e-5665d12dfa86}</Project>
       <Name>OpenTalk.Session</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenTalk.Tasks\OpenTalk.Tasks.csproj">
+      <Project>{23179625-8A00-4131-B6CA-9666B8DFABD7}</Project>
+      <Name>OpenTalk.Tasks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpenTalk.UI\OpenTalk.UI.csproj">
       <Project>{9c4ca98c-cf20-4182-8386-2a59ead3ebde}</Project>
       <Name>OpenTalk.UI</Name>

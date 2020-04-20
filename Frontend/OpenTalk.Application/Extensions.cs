@@ -122,7 +122,7 @@ namespace OpenTalk
         /// <param name="functor"></param>
         /// <returns></returns>
         public static Task<T> ContinueOnMessageLoop<T>(this Task anyTask, Func<Task, T> functor)
-            => anyTask.ContinueWith((oldTask) => Application.Tasks.Invoke(() => functor(oldTask)).WaitResult());
+            => anyTask.ContinueWith((oldTask) => Application.Tasks.Invoke(() => functor(oldTask)).Result);
 
         /// <summary>
         /// lock 키워드로, 락을 걸고, functor를 실행합니다.

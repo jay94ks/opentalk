@@ -72,6 +72,14 @@ namespace OpenTalk.Tasks
             => new ActionFuture(Functor);
 
         /// <summary>
+        /// 지정된 펑터를 UI 쓰레드에서 실행하는 작업을 생성합니다.
+        /// </summary>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future RunForUI(Action Functor)
+            => new UIActionFuture(Functor);
+
+        /// <summary>
         /// 지연시간이 무한인 작업, 즉, 취소를 제외하고
         /// 완료될 수 없는 작업을 생성합니다.
         /// </summary>
@@ -93,6 +101,24 @@ namespace OpenTalk.Tasks
         /// <returns></returns>
         public static Future<ResultType> Run<ResultType>(Func<ResultType> Functor)
             => new ActionFuture<ResultType>(Functor);
+
+        /// <summary>
+        /// 지정된 펑터를 쓰레드 풀에서 실행하는 작업을 생성합니다.
+        /// </summary>
+        /// <param name="Functor"></param>
+        /// <returns></returns>
+        public static Future<ResultType> RunForUI<ResultType>(Func<ResultType> Functor)
+        {
+            FutureSource<ResultType> Source = new FutureSource<ResultType>();
+
+            RunForUI(() =>
+            {
+                try { Source.TrySetCompleted(Functor()); }
+                catch(Exception e) { Source.TrySetFaulted(e); }
+            });
+
+            return Source.Future;
+        }
 
         /// <summary>
         /// 이미 완료된 작업을 생성합니다.

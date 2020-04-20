@@ -181,7 +181,7 @@ namespace OpenTalk.Tasks
             lock (this)
                 m_ExpectsCanceled = true;
 
-            return Future.Cancel(m_Future);
+            return Tasks.Future.Cancel(m_Future);
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace OpenTalk.Tasks
             lock (this)
                 m_ExpectsCanceled = true;
 
-            if (!Future.Cancel(m_Future))
+            if (!Tasks.Future.Cancel(m_Future))
             {
                 if (m_Future.IsCanceled)
                     throw new FutureImpossibleException(FutureImpossibleReason.Canceled);
