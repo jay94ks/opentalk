@@ -1,8 +1,6 @@
 ﻿using OpenTalk.Tasks.Internals;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenTalk.Tasks
@@ -114,7 +112,7 @@ namespace OpenTalk.Tasks
             TaskCompletionSource<object> TCS
                 = new TaskCompletionSource<object>();
 
-            this.Then((X) =>
+            Then((X) =>
             {
                 if (X.IsCanceled)
                     TCS.TrySetCanceled();
@@ -127,6 +125,13 @@ namespace OpenTalk.Tasks
 
             return TCS.Task;
         }
+
+        /// <summary>
+        /// 작업을 대기하는 대기자를 획득합니다.
+        /// C# 자체 비동기 문법인 await 지원용.
+        /// </summary>
+        /// <returns></returns>
+        public FutureAwaiter GetAwaiter() => new FutureAwaiter(this);
     }
 
     /// <summary>
@@ -155,7 +160,7 @@ namespace OpenTalk.Tasks
             TaskCompletionSource<ResultType> TCS
                 = new TaskCompletionSource<ResultType>();
 
-            this.Then((X) =>
+            Then((X) =>
             {
                 if (X.IsCanceled)
                     TCS.TrySetCanceled();
@@ -163,10 +168,18 @@ namespace OpenTalk.Tasks
                 else if (X.IsFaulted)
                     TCS.TrySetException(X.Exception);
 
-                else TCS.TrySetResult((X as Future<ResultType>).Result);
+                else TCS.TrySetResult(X.Result);
             });
 
             return TCS.Task;
         }
+
+        /// <summary>
+        /// 작업을 대기하는 대기자를 획득합니다.
+        /// C# 자체 비동기 문법인 await 지원용.
+        /// </summary>
+        /// <returns></returns>
+        public new FutureAwaiter<ResultType> GetAwaiter() 
+            => new FutureAwaiter<ResultType>(this);
     }
 }

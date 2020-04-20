@@ -200,6 +200,28 @@ namespace OpenTalk.UI.CefUnity
         }
 
         /// <summary>
+        /// 현재 보여지고 있는 인터페이스를 리로드합니다.
+        /// 아직 로딩 중일땐 무시합니다.
+        /// </summary>
+        /// <returns></returns>
+        public Future ReloadInterface()
+        {
+            if (Cycles.Loading.IsCompleted)
+                return Future.MakeCanceled();
+
+            return Cycles.Ready.Then((X) =>
+            {
+                if (Cycles.Loading.IsCompleted)
+                {
+                    Future.RunForUI(() =>
+                    {
+                        m_Browser.Reload();
+                    }).Wait();
+                }
+            });
+        } 
+
+        /// <summary>
         /// CEF 브라우져 인스턴스를 초기화시킵니다.
         /// </summary>
         private void BootstrapBrowserInstance()
