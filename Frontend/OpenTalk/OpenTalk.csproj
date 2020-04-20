@@ -78,6 +78,9 @@
     <Compile Include="FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Main\Renderers\InterfaceFiles.cs" />
+    <Compile Include="Main\Renderers\MainPage.cs" />
+    <Compile Include="Main\Renderers\StatusPolling.cs" />
     <Compile Include="Main\ScrMain.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -159,6 +162,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\login_bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Common\jQuery-3.5.0.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

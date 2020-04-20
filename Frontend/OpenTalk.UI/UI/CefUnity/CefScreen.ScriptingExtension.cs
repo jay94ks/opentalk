@@ -18,7 +18,7 @@
             /// </summary>
             public void Close()
             {
-                m_Master.OnCloseRequested();
+                m_Master.OnCloseRequested(new CefScreenClosingEventArgs(m_Master));
             }
         }
     }

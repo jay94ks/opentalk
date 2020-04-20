@@ -34,7 +34,7 @@ namespace OpenTalk.UI.CefUnity
                 CefDialogEventArgs Event = new CefDialogEventArgs(
                     m_Master, CefDialogType.Confirm, callback, messageText);
 
-                m_Master.m_DialogEvent.Broadcast(m_Master, Event);
+                m_Master.OnDialogRequested(Event);
 
                 if (!Event.IsHandled)
                 {
@@ -102,7 +102,7 @@ namespace OpenTalk.UI.CefUnity
                 Event = new CefDialogEventArgs(m_Master, requestType,
                     callback, messageText, defaultPromptText);
 
-                m_Master.m_DialogEvent.Broadcast(m_Master, Event);
+                m_Master.OnDialogRequested(Event);
 
                 if (!Event.IsHandled)
                 {

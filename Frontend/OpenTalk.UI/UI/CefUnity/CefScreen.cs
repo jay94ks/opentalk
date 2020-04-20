@@ -21,14 +21,20 @@ namespace OpenTalk.UI.CefUnity
         private EventHandlerCollection<CefDialogEventArgs> m_DialogEvent
             = new EventHandlerCollection<CefDialogEventArgs>();
 
+        private EventHandlerCollection<CefScreenClosingEventArgs> m_ClosingEvent
+            = new EventHandlerCollection<CefScreenClosingEventArgs>();
+
         /// <summary>
         /// Cef Screen을 초기화합니다.
         /// </summary>
         public CefScreen()
         {
-            Cycles = new LifeCycle(this);
-            Router = new InterfaceRouter();
-            Scripting = new ScriptingManager(this);
+            if (!IsReallyDesignMode())
+            {
+                Cycles = new LifeCycle(this);
+                Router = new InterfaceRouter();
+                Scripting = new ScriptingManager(this);
+            }
         }
 
         /// <summary>
@@ -54,16 +60,55 @@ namespace OpenTalk.UI.CefUnity
         /// <summary>
         /// 이 스크린을 닫아 달라는 요청을 받으면 실행됩니다.
         /// </summary>
-        public event EventHandler CloseRequested;
+        public event EventHandler<CefScreenClosingEventArgs> CloseRequested {
+            add { m_ClosingEvent.Add(value); }
+            remove { m_ClosingEvent.Remove(value); }
+        }
+
+        /// <summary>
+        /// 다이얼로그를 보여달라는 요청을 받으면 실행됩니다.
+        /// </summary>
+        public event EventHandler<CefDialogEventArgs> DialogRequested {
+            add { m_DialogEvent.Add(value); }
+            remove { m_DialogEvent.Remove(value); }
+        }
+
+        /// <summary>
+        /// 인터페이스 로딩이 시작되면 실행됩니다.
+        /// </summary>
+        public event EventHandler LoadStart;
+
+        /// <summary>
+        /// 인터페이스 로딩이 완료되면 실행됩니다.
+        /// </summary>
+        public event EventHandler LoadEnd;
 
         /// <summary>
         /// 이 스크린을 닫아 달라는 요청을 받으면 실행됩니다.
         /// (ScriptExtension에서 호출함)
         /// </summary>
-        internal void OnCloseRequested()
-        {
-            Future.RunForUI(() => CloseRequested?.Invoke(this, EventArgs.Empty));
-        }
+        protected virtual void OnCloseRequested(CefScreenClosingEventArgs e)
+            => m_ClosingEvent.Broadcast(this, e);
+
+        /// <summary>
+        /// 다이얼로그를 보여달라는 요청을 받으면 실행됩니다.
+        /// </summary>
+        protected virtual void OnDialogRequested(CefDialogEventArgs e)
+            => m_DialogEvent.Broadcast(this, e);
+
+        /// <summary>
+        /// 인터페이스 로딩이 시작되면 실행됩니다.
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnLoadStart(EventArgs e)
+            => LoadStart?.Invoke(this, e);
+
+        /// <summary>
+        /// 인터페이스 로딩이 완료되면 실행됩니다.
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnLoadEnd(EventArgs e)
+            => LoadEnd?.Invoke(this, e);
 
         /// <summary>
         /// 이 스크린에 보조 컨트롤이 부착될 때 마다 브라우져 컨트롤을 뒤로 옮깁니다.
@@ -128,8 +173,11 @@ namespace OpenTalk.UI.CefUnity
         protected override void OnLoad(EventArgs e)
         {
             // CEF 컴포넌트가 초기화에 성공하면 브라우져 인스턴스를 준비시킵니다.
-            Future.IfMet(() => GetCEFComponent() != null,
-                () => Future.RunForUI(InitializeBrowserInstance));
+            if (!IsReallyDesignMode())
+            {
+                Future.IfMet(() => GetCEFComponent() != null,
+                    () => Future.RunForUI(InitializeBrowserInstance));
+            }
 
             base.OnLoad(e);
         }
@@ -141,13 +189,10 @@ namespace OpenTalk.UI.CefUnity
         {
             CefComponent cefComponent = GetCEFComponent();
 
-            if (cefComponent.IsNotNull())
+            if (m_Browser.IsNull() &&
+                cefComponent.RegisterScreen(this))
             {
-                if (m_Browser.IsNull() && !IsReallyDesignMode() &&
-                    cefComponent.RegisterScreen(this))
-                {
-                    BootstrapBrowserInstance();
-                }
+                BootstrapBrowserInstance();
             }
         }
 
@@ -159,7 +204,7 @@ namespace OpenTalk.UI.CefUnity
         {
             CefComponent cefComponent = GetCEFComponent(null, false);
 
-            if (disposing && cefComponent.IsNotNull())
+            if (cefComponent.IsNotNull())
                 cefComponent.UnregisterScreen(this);
 
             base.Dispose(disposing);
@@ -256,20 +301,20 @@ namespace OpenTalk.UI.CefUnity
                 else Cycles.Initialization.Unset();
             };
 
-            // 브라우저 인스턴스를 준비 상태로 만듭니다.
-            Cycles.Instance.SetCompleted();
+            m_Browser.FrameLoadStart += (X, Y) =>
+            {
+                if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
+                    OnLoadStart(EventArgs.Empty);
+            };
+
             m_Browser.FrameLoadEnd += (X, Y) =>
             {
                 if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
-                {
-                    try
-                    {
-                        if (Debugger.IsAttached)
-                            m_Browser.ShowDevTools();
-                    }
-                    catch { }
-                }
+                    OnLoadEnd(EventArgs.Empty);
             };
+
+            // 브라우저 인스턴스를 준비 상태로 만듭니다.
+            Cycles.Instance.SetCompleted();
 
             // 컨트롤을 추가합니다.
             Controls.Add(m_Browser);
@@ -287,6 +332,23 @@ namespace OpenTalk.UI.CefUnity
 
                 else break;
             }
+        }
+
+        /// <summary>
+        /// 개발자 도구를 엽니다.
+        /// </summary>
+        public bool ShowDevDialog()
+        {
+            try
+            {
+                if (m_Browser != null && Debugger.IsAttached)
+                {
+                    Cycles.Instance.Future.Then(() => m_Browser.ShowDevTools());
+                    return true;
+                }
+            }
+            catch { }
+            return false;
         }
 
         /// <summary>
@@ -417,7 +479,9 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnNowVisible(EventArgs e)
         {
-            Scripting.Invoke(SCRIPT_InvokeVisible);
+            if (!IsReallyDesignMode())
+                Scripting.Invoke(SCRIPT_InvokeVisible);
+
             base.OnNowVisible(e);
         }
 
@@ -427,7 +491,9 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnNowInvisible(EventArgs e)
         {
-            Scripting.Invoke(SCRIPT_InvokeInvisible);
+            if (!IsReallyDesignMode())
+                Scripting.Invoke(SCRIPT_InvokeInvisible);
+
             base.OnNowInvisible(e);
         }
     }

@@ -98,12 +98,19 @@
     <Compile Include="UI\CefUnity\CefScreen.ScriptingExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="UI\CefUnity\CefScreenClosingEventArgs.cs" />
     <Compile Include="UI\CefUnity\CefScriptHandle.cs" />
     <Compile Include="UI\CefUnity\CefScriptHandle.FileScriptHandle.cs" />
     <Compile Include="UI\CefUnity\CefScriptHandle.FunctionScriptHandle.cs" />
     <Compile Include="UI\CefUnity\CefScriptHandle.TextScriptHandle.cs" />
     <Compile Include="UI\Extensions\ControlActs.cs" />
     <Compile Include="UI\Extensions\FormEvents.cs" />
+    <Compile Include="UI\Forms\ColorizedProgressBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\ColorizedProgressBar.Designer.cs">
+      <DependentUpon>ColorizedProgressBar.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ScreenSwitcher.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -144,7 +151,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="UI\Forms\" />
+    <EmbeddedResource Include="UI\Forms\ColorizedProgressBar.resx">
+      <DependentUpon>ColorizedProgressBar.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

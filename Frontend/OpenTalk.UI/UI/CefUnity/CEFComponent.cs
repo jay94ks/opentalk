@@ -62,8 +62,11 @@ namespace OpenTalk.UI.CefUnity
         /// <returns></returns>
         public static CefComponent GetCEFComponent(Application application = null, bool allowCreate = true)
         {
-            application = application != null ? 
-                application : Application.RunningInstance;
+            if (Application.FutureInstance.IsCompleted)
+            {
+                application = application != null ?
+                    application : Application.RunningInstance;
+            }
 
             if (application != null)
             {

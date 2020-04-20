@@ -43,6 +43,7 @@
     <Compile Include="Tasks\Future.cs" />
     <Compile Include="Tasks\Future.Then.cs" />
     <Compile Include="Tasks\Future.Outfits.cs" />
+    <Compile Include="Tasks\FutureAwaiter.cs" />
     <Compile Include="Tasks\FutureEventCombination.cs" />
     <Compile Include="Tasks\FutureEventSource.cs" />
     <Compile Include="Tasks\FutureConditionSource.cs" />

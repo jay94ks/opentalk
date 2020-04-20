@@ -35,7 +35,7 @@ namespace OpenTalk
         /// <summary>
         /// 약관 읽기 주소입니다.
         /// </summary>
-        internal static Uri g_ReadAgrementsUri = new Uri("http://127.0.0.1/agreements.php");
+        internal static Uri g_ReadAgreementsUri = new Uri("http://127.0.0.1/agreements.php");
 
         /// <summary>
         /// 오픈톡 인스턴스입니다.

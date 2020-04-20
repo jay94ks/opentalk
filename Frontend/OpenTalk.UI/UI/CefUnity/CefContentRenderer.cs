@@ -116,7 +116,7 @@ namespace OpenTalk.UI.CefUnity
         /// 그렇지 않고, 동일한 인스턴스로 동작하도록 구성하려면 그대로 유지하십시오.
         /// </summary>
         /// <returns></returns>
-        public virtual CefContentRenderer OnRouted(CefScreen screen)
+        public virtual CefContentRenderer OnRouted(CefScreen screen, string PathName)
         {
             return this;
         }

@@ -1,5 +1,7 @@
 ﻿using OpenTalk.Credentials;
 using OpenTalk.Main;
+using OpenTalk.Main.Renderers;
+using OpenTalk.UI.CefUnity;
 using OpenTalk.UI.Extensions;
 using System;
 using System.Collections.Generic;
@@ -39,6 +41,9 @@ namespace OpenTalk
             m_Session.Authentication.Authenticated += OnAuthenticationChanged;
             m_Session.Authentication.Deauthenticated += OnAuthenticationChanged;
             m_TrayMenuLockMode.Enabled = m_TrayMenuLogout.Enabled = false;
+
+            // 일반적인 인터페이스 파일들을 Fail-Over 렌더러로 등록합니다.
+            CefScreen.GlobalRouter.FailOver(new InterfaceFiles());
         }
 
         /// <summary>

@@ -17,6 +17,8 @@ namespace OpenTalk.UI.CefUnity
             private Dictionary<string, CefContentRenderer> m_Renderers
                 = new Dictionary<string, CefContentRenderer>();
 
+            private CefContentRenderer m_Failback;
+
             /// <summary>
             /// 모든 렌더러를 제거합니다.
             /// </summary>
@@ -48,6 +50,20 @@ namespace OpenTalk.UI.CefUnity
             }
 
             /// <summary>
+            /// FailOver 렌더러를 등록합니다.
+            /// </summary>
+            /// <param name="Renderer"></param>
+            /// <returns></returns>
+            public bool FailOver(CefContentRenderer Renderer)
+            {
+                if (this != GlobalRouter)
+                    return false;
+
+                m_Failback = Renderer;
+                return true;
+            }
+
+            /// <summary>
             /// 주어진 경로 문자열을 기반으로 컨텐트 렌더러를 획득합니다.
             /// </summary>
             /// <param name="requestedUri"></param>
@@ -70,10 +86,11 @@ namespace OpenTalk.UI.CefUnity
                 }
 
                 if (renderer.IsNotNull())
-                    renderer = renderer.OnRouted(screen);
+                    renderer = renderer.OnRouted(screen, requestedUri);
 
                 return renderer.IsNotNull() ? renderer :
-                    (GlobalRouter != this ? GlobalRouter.Route(screen, requestedUri) : null);
+                    (GlobalRouter != this ? GlobalRouter.Route(screen, requestedUri) : 
+                    (m_Failback != null ? m_Failback.OnRouted(screen, requestedUri) : null));
             }
         }
     }
