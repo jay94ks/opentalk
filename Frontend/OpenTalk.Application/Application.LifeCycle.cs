@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTalk.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,9 +15,9 @@ namespace OpenTalk
             private List<EventHandler<EventArgs>> m_EveInit;
             private List<EventHandler<EventArgs>> m_EveDeInit;
 
-            private TaskCompletionSource<EventArgs> m_TaskPreInit;
-            private TaskCompletionSource<EventArgs> m_TaskInit;
-            private TaskCompletionSource<EventArgs> m_TaskDeinit;
+            private FutureSource<EventArgs> m_TaskPreInit;
+            private FutureSource<EventArgs> m_TaskInit;
+            private FutureSource<EventArgs> m_TaskDeinit;
 
             /// <summary>
             /// 이벤트 컨테이너를 초기화합니다.
@@ -29,9 +30,9 @@ namespace OpenTalk
                 m_EveInit = new List<EventHandler<EventArgs>>();
                 m_EveDeInit = new List<EventHandler<EventArgs>>();
 
-                m_TaskPreInit = new TaskCompletionSource<EventArgs>();
-                m_TaskInit = new TaskCompletionSource<EventArgs>();
-                m_TaskDeinit = new TaskCompletionSource<EventArgs>();
+                m_TaskPreInit = new FutureSource<EventArgs>();
+                m_TaskInit = new FutureSource<EventArgs>();
+                m_TaskDeinit = new FutureSource<EventArgs>();
             }
 
             /// <summary>
@@ -62,17 +63,17 @@ namespace OpenTalk
             /// <summary>
             /// 어플리케이션의 사전 초기화가 완료되면 완료되는 Task 객체입니다.
             /// </summary>
-            public Task<EventArgs> PreInitializeTask => m_TaskPreInit.Task;
+            public Future<EventArgs> PreInitializeTask => m_TaskPreInit.Future;
 
             /// <summary>
             /// 어플리케이션의 초기화가 완료되면 완료되는 Task 객체입니다.
             /// </summary>
-            public Task<EventArgs> InitializeTask => m_TaskPreInit.Task;
+            public Future<EventArgs> InitializeTask => m_TaskPreInit.Future;
 
             /// <summary>
             /// 어플리케이션의 종료되기 직전에 완료되는 Task 객체입니다.
             /// </summary>
-            public Task<EventArgs> DeInitializeTask => m_TaskPreInit.Task;
+            public Future<EventArgs> DeInitializeTask => m_TaskPreInit.Future;
 
             /// <summary>
             /// PreInitialize 이벤트를 발생시킵니다.
@@ -95,7 +96,7 @@ namespace OpenTalk
             /// <param name="Handlers"></param>
             private void InvokeEvents(
                 List<EventHandler<EventArgs>> Handlers,
-                TaskCompletionSource<EventArgs> TCS)
+                FutureSource<EventArgs> TCS)
             {
                 EventArgs EventArgs = new EventArgs(m_Application);
 
@@ -105,7 +106,7 @@ namespace OpenTalk
                         Handler(m_Application, EventArgs);
                 }
 
-                TCS.SetResult(EventArgs);
+                TCS.TrySetCompleted(EventArgs);
             }
         }
     }

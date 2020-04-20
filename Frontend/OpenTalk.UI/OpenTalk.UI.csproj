@@ -77,6 +77,9 @@
     <Compile Include="UI\CefUnity\CefContent.cs" />
     <Compile Include="UI\CefUnity\CefDialogEventArgs.cs" />
     <Compile Include="UI\CefUnity\CefEventArgs.cs" />
+    <Compile Include="UI\CefUnity\CefScreen.ScriptingManager.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="UI\CefUnity\CefScreen.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -89,6 +92,16 @@
     <Compile Include="UI\CefUnity\CefScreen.JsDialogHandler.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="UI\CefUnity\CefScreen.LifeCycle.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\CefUnity\CefScreen.ScriptingExtension.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\CefUnity\CefScriptHandle.cs" />
+    <Compile Include="UI\CefUnity\CefScriptHandle.FileScriptHandle.cs" />
+    <Compile Include="UI\CefUnity\CefScriptHandle.FunctionScriptHandle.cs" />
+    <Compile Include="UI\CefUnity\CefScriptHandle.TextScriptHandle.cs" />
     <Compile Include="UI\Extensions\ControlActs.cs" />
     <Compile Include="UI\Extensions\FormEvents.cs" />
     <Compile Include="UI\ScreenSwitcher.cs">

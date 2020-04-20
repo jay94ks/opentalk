@@ -43,12 +43,14 @@
     <Compile Include="Tasks\Future.cs" />
     <Compile Include="Tasks\Future.Then.cs" />
     <Compile Include="Tasks\Future.Outfits.cs" />
+    <Compile Include="Tasks\FutureEventCombination.cs" />
     <Compile Include="Tasks\FutureEventSource.cs" />
     <Compile Include="Tasks\FutureConditionSource.cs" />
     <Compile Include="Tasks\FutureImpossibleException.cs" />
     <Compile Include="Tasks\FutureSource.cs" />
     <Compile Include="Tasks\FutureSource.SourcedFuture.cs" />
     <Compile Include="Tasks\FutureStatus.cs" />
+    <Compile Include="Tasks\IFutureEventSource.cs" />
     <Compile Include="Tasks\IFutureSource.cs" />
     <Compile Include="Tasks\Internals\ActionFuture.cs" />
     <Compile Include="Tasks\Internals\DelayedFuture.cs" />

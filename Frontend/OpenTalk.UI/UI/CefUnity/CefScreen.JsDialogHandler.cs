@@ -31,9 +31,12 @@ namespace OpenTalk.UI.CefUnity
             public bool OnBeforeUnloadDialog(IWebBrowser chromiumWebBrowser, IBrowser browser,
                 string messageText, bool isReload, IJsDialogCallback callback)
             {
-                if (!m_Master.m_DialogEvent.Broadcast(m_Master,
-                    new CefDialogEventArgs(m_Master, CefDialogType.Confirm,
-                    callback, messageText)))
+                CefDialogEventArgs Event = new CefDialogEventArgs(
+                    m_Master, CefDialogType.Confirm, callback, messageText);
+
+                m_Master.m_DialogEvent.Broadcast(m_Master, Event);
+
+                if (!Event.IsHandled)
                 {
                     Form Form = m_Master.GetParent<Form>();
                     DialogResult Result = DialogResult.Yes;
@@ -72,6 +75,7 @@ namespace OpenTalk.UI.CefUnity
                 IJsDialogCallback callback, ref bool d)
             {
                 CefDialogType requestType = CefDialogType.Alert;
+                CefDialogEventArgs Event = null;
 
                 switch (dialogType)
                 {
@@ -95,9 +99,12 @@ namespace OpenTalk.UI.CefUnity
                     string.IsNullOrWhiteSpace(defaultPromptText))
                     defaultPromptText = null;
 
-                if (!m_Master.m_DialogEvent.Broadcast(m_Master,
-                    new CefDialogEventArgs(m_Master, requestType,
-                    callback, messageText, defaultPromptText)))
+                Event = new CefDialogEventArgs(m_Master, requestType,
+                    callback, messageText, defaultPromptText);
+
+                m_Master.m_DialogEvent.Broadcast(m_Master, Event);
+
+                if (!Event.IsHandled)
                 {
                     Form Form = m_Master.GetParent<Form>(true);
                     DialogResult Result = DialogResult.Yes;

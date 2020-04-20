@@ -9,7 +9,7 @@ namespace OpenTalk.Tasks
     /// <summary>
     /// Future 객체를 이용한 이벤트 객체입니다.
     /// </summary>
-    public class FutureEventSource : IFutureSource
+    public class FutureEventSource : IFutureSource, IFutureEventSource
     {
         private FutureSource m_Source;
         private bool m_WasSet;
@@ -50,7 +50,7 @@ namespace OpenTalk.Tasks
         /// <summary>
         /// 이벤트의 실행 인자를 생성하는 팩토리 콜백입니다.
         /// </summary>
-        public Func<FutureEventSource, EventArgs> EventArgs { get; set; }
+        public Func<IFutureEventSource, EventArgs> EventArgs { get; set; }
 
         /// <summary>
         /// 이벤트를 설정합니다.
@@ -101,7 +101,7 @@ namespace OpenTalk.Tasks
     /// <summary>
     /// Future 객체를 이용한 이벤트 객체입니다.
     /// </summary>
-    public class FutureEventSource<ResultType>
+    public class FutureEventSource<ResultType> : IFutureSource, IFutureEventSource<ResultType>
     {
         private FutureSource<ResultType> m_Source;
         private ResultType m_LatestResult;
@@ -116,10 +116,25 @@ namespace OpenTalk.Tasks
             Sender = this;
         }
 
+
         /// <summary>
         /// 현재 이벤트 상태와 연관된 작업 객체입니다.
         /// </summary>
         public Future<ResultType> Future {
+            get { lock (this) return m_Source.Future; }
+        }
+
+        /// <summary>
+        /// 현재 이벤트 상태와 연관된 작업 객체입니다.
+        /// </summary>
+        Future IFutureSource.Future {
+            get { lock (this) return m_Source.Future; }
+        }
+
+        /// <summary>
+        /// 현재 이벤트 상태와 연관된 작업 객체입니다.
+        /// </summary>
+        Future IFutureEventSource.Future {
             get { lock (this) return m_Source.Future; }
         }
 
@@ -141,7 +156,7 @@ namespace OpenTalk.Tasks
         /// <summary>
         /// 이벤트의 실행 인자를 생성하는 팩토리 콜백입니다.
         /// </summary>
-        public Func<FutureEventSource<ResultType>, EventArgs> EventArgs { get; set; }
+        public Func<IFutureEventSource, EventArgs> EventArgs { get; set; }
 
         /// <summary>
         /// 이벤트를 설정합니다.
@@ -219,6 +234,16 @@ namespace OpenTalk.Tasks
                         EventArgs(this) : System.EventArgs.Empty);
                 }
             }
+        }
+
+        void IFutureEventSource.Set()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFutureEventSource.Unset()
+        {
+            throw new NotImplementedException();
         }
     }
 }

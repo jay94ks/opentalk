@@ -1,5 +1,6 @@
 ﻿using CefSharp;
 using CefSharp.WinForms;
+using OpenTalk.Tasks;
 using OpenTalk.UI.Extensions;
 using OpenTalk.Utilities;
 using System;
@@ -16,67 +17,18 @@ namespace OpenTalk.UI.CefUnity
     public partial class CefScreen : Screen
     {
         private ChromiumWebBrowser m_Browser;
-        private Action m_TickAction;
-        private Timer m_Timer;
 
         private EventHandlerCollection<CefDialogEventArgs> m_DialogEvent
             = new EventHandlerCollection<CefDialogEventArgs>();
-
-        private StateTaskSource m_BrowserInitState = new StateTaskSource();
-        private StateTaskSource m_BrowserLoadingState = new StateTaskSource();
-        private StateTaskSource m_BrowserJSObjectState = new StateTaskSource();
-        private StateTaskSource<string> m_RegistrationReady = new StateTaskSource<string>();
-        private Dictionary<string, object> m_JSObjects = new Dictionary<string, object>();
-
-        /// <summary>
-        /// 매 페이지 로딩시마다 주입되는 코드입니다.
-        /// 페이지 로드가 완료되고, 스크립팅 준비가 끝나면 
-        /// 브라우져 내에서 __cefScreenRd 값을 true로 설정하고,
-        /// __cefScreenCb 함수를 실행합니다.
-        /// 
-        /// 즉, 사용자는 __cefScreenRd 값이 true가 아닐 때, 
-        /// __cefScreenCb 콜백을 설정함으로서 로딩 완료 여부를 추적할 수 있습니다.
-        /// 
-        /// 또, window.close 함수의 실제 동작을 "제거"합니다.
-        /// </summary>
-        private static readonly string SCRIPT_InvokeCallback 
-            = "window.__cefScreenRd = true;" +
-            "window.close = function() { };" +
-            "if (window.__cefScreenCb != undefined) {" +
-            "window.__cefScreenCb();" +
-            "}";
-
-        private static readonly string SCRIPT_InvokeInvisible
-            = "window.__cefVisible = false;" +
-            "if (window.__cefVisibleCb != undefined) {" +
-            "window.__cefVisibleCb(false);" +
-            "}";
-
-        private static readonly string SCRIPT_InvokeVisible
-            = "window.__cefVisible = true;" +
-            "if (window.__cefVisibleCb != undefined) {" +
-            "window.__cefVisibleCb(true);" +
-            "}";
 
         /// <summary>
         /// Cef Screen을 초기화합니다.
         /// </summary>
         public CefScreen()
         {
+            Cycles = new LifeCycle(this);
             Router = new InterfaceRouter();
-            (m_Timer = new Timer() { Interval = 100 })
-                .Tick += (X, Y) =>
-                {
-                    Action Functor;
-
-                    lock (this) {
-                        Functor = m_TickAction;
-                    }
-
-                    Functor?.Invoke();
-                };
-
-            m_Timer.Start();
+            Scripting = new ScriptingManager(this);
         }
 
         /// <summary>
@@ -88,6 +40,30 @@ namespace OpenTalk.UI.CefUnity
         /// 인터페이스 라우터입니다.
         /// </summary>
         public InterfaceRouter Router { get; private set; }
+
+        /// <summary>
+        /// 프로그래밍 가능한 라이프 사이클 이벤트들 입니다.
+        /// </summary>
+        public LifeCycle Cycles { get; private set; }
+
+        /// <summary>
+        /// 스크립트 바인딩 관리자입니다.
+        /// </summary>
+        public ScriptingManager Scripting { get; private set; }
+
+        /// <summary>
+        /// 이 스크린을 닫아 달라는 요청을 받으면 실행됩니다.
+        /// </summary>
+        public event EventHandler CloseRequested;
+
+        /// <summary>
+        /// 이 스크린을 닫아 달라는 요청을 받으면 실행됩니다.
+        /// (ScriptExtension에서 호출함)
+        /// </summary>
+        internal void OnCloseRequested()
+        {
+            Future.RunForUI(() => CloseRequested?.Invoke(this, EventArgs.Empty));
+        }
 
         /// <summary>
         /// 이 스크린에 보조 컨트롤이 부착될 때 마다 브라우져 컨트롤을 뒤로 옮깁니다.
@@ -151,10 +127,9 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnLoad(EventArgs e)
         {
-            lock (this)
-            {
-                m_TickAction = InitializeBrowserInstanceAsync;
-            }
+            // CEF 컴포넌트가 초기화에 성공하면 브라우져 인스턴스를 준비시킵니다.
+            Future.IfMet(() => GetCEFComponent() != null,
+                () => Future.RunForUI(InitializeBrowserInstance));
 
             base.OnLoad(e);
         }
@@ -162,21 +137,16 @@ namespace OpenTalk.UI.CefUnity
         /// <summary>
         /// 브라우져 인스턴스를 비동기적으로 초기화합니다.
         /// </summary>
-        private void InitializeBrowserInstanceAsync()
+        private void InitializeBrowserInstance()
         {
-            CefComponent cefComponent = CefComponent.GetCEFComponent();
+            CefComponent cefComponent = GetCEFComponent();
 
             if (cefComponent.IsNotNull())
             {
                 if (m_Browser.IsNull() && !IsReallyDesignMode() &&
                     cefComponent.RegisterScreen(this))
                 {
-                    InitializeBrowserInstance();
-
-                    lock (this)
-                    {
-                        m_TickAction = null;
-                    }
+                    BootstrapBrowserInstance();
                 }
             }
         }
@@ -200,14 +170,14 @@ namespace OpenTalk.UI.CefUnity
         /// </summary>
         /// <param name="screenId"></param>
         internal void OnScreenRegistered(string screenId)
-            => m_RegistrationReady.Set(ScreenId = screenId);
+            => Cycles.Registration.Set(ScreenId = screenId);
 
         /// <summary>
         /// 스크린이 등록 해제되면 실행되는 메서드입니다.
         /// </summary>
         internal void OnScreenUnregistered()
         {
-            m_RegistrationReady.Unset();
+            Cycles.Registration.Unset();
             ScreenId = null;
         }
 
@@ -217,107 +187,22 @@ namespace OpenTalk.UI.CefUnity
         /// 단, 그 성공/실패 여부는 추적할 수 없습니다.
         /// </summary>
         /// <param name="InterfaceId"></param>
-        public Task LoadInterface(string InterfaceId)
+        public Future LoadInterface(string InterfaceId)
         {
-            Task Task = new CombinedTaskSource<object>(
-                () =>
-                {
-                    Application.Tasks.Invoke(
-                        () => m_Browser.Load(string.Format("otk://" + ScreenId + "/" + InterfaceId))
-                    ).Wait();
-
-                    return this;
-                },
-                m_BrowserInitState.Task, m_BrowserLoadingState.Task,
-                m_RegistrationReady.Task).Task;
-
-            return Task;
-        }
-
-        /// <summary>
-        /// 지정된 객체를 자바스크립트 객체로 바인드시킵니다.
-        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
-        /// </summary>
-        /// <param name="ObjectName"></param>
-        /// <param name="Object"></param>
-        /// <returns></returns>
-        public Task<bool> Bind(string ObjectName, object Object)
-        {
-            return m_BrowserJSObjectState.Task.ContinueOnMessageLoop((X) =>
+            return Cycles.Ready.Then((X) =>
             {
-                lock (m_JSObjects)
+                Future.RunForUI(() =>
                 {
-                    if (m_JSObjects.ContainsKey(ObjectName))
-                        return false;
-
-                    m_JSObjects.Add(ObjectName, Object);
-                }
-
-                ExecuteScript(string.Format(
-                    "if (window.__cefBindCb != undefined) {" +
-                    "window.__cefBindCb(\"{0}\", \"BIND\");" +
-                    "}", ObjectName));
-
-                return true;
+                    m_Browser.Load(string.Format(
+                        "otk://" + ScreenId + "/" + InterfaceId));
+                }).Wait();
             });
-        }
-
-        /// <summary>
-        /// 지정된 객체 바인딩을 제거합니다.
-        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
-        /// </summary>
-        /// <param name="ObjectName"></param>
-        /// <param name="Object"></param>
-        /// <returns></returns>
-        public Task<bool> Unbind(string ObjectName, object Object)
-        {
-            return m_BrowserJSObjectState.Task.ContinueOnMessageLoop((X) =>
-            {
-                lock (m_JSObjects)
-                {
-                    if (m_JSObjects.ContainsKey(ObjectName))
-                        return false;
-
-                    m_JSObjects.Add(ObjectName, Object);
-                }
-
-                ExecuteScript(string.Format(
-                    "if (window.__cefBindCb != undefined) {" +
-                    "window.__cefBindCb(\"{0}\", \"UNBIND\");" +
-                    "}", ObjectName));
-
-                return true;
-            });
-        }
-
-        /// <summary>
-        /// 지정된 자바스크립트를 브라우져 내에서 실행시킵니다.
-        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
-        /// </summary>
-        /// <param name="Scripts"></param>
-        /// <returns></returns>
-        public Task ExecuteScript(string Scripts)
-        {
-            return m_BrowserLoadingState.Task.ContinueOnMessageLoop(
-                (X) => m_Browser.ExecuteScriptAsync(Scripts));
-        }
-
-        /// <summary>
-        /// 지정된 자바스크립트 함수를 브라우져 내에서 실행시킵니다.
-        /// 단, 그 실행완료 여부는 추적할 수 없습니다.
-        /// </summary>
-        /// <param name="Scripts"></param>
-        /// <returns></returns>
-        public Task ExecuteScript(string Function, params object[] Arguments)
-        {
-            return m_BrowserLoadingState.Task.ContinueOnMessageLoop(
-                (X) => m_Browser.ExecuteScriptAsync(Function, Arguments));
         }
 
         /// <summary>
         /// CEF 브라우져 인스턴스를 초기화시킵니다.
         /// </summary>
-        private void InitializeBrowserInstance()
+        private void BootstrapBrowserInstance()
         {
             m_Browser = new ChromiumWebBrowser("otk://" + ScreenId + "/")
             {
@@ -344,34 +229,17 @@ namespace OpenTalk.UI.CefUnity
             m_Browser.IsBrowserInitializedChanged += (X, Y) =>
             {
                 if (m_Browser.IsBrowserInitialized)
-                    m_BrowserInitState.Set(m_Browser);
+                    Cycles.Initialization.Set();
 
-                else m_BrowserInitState.Unset();
+                else Cycles.Initialization.Unset();
             };
 
-            // 메인 프레임 로드 시작/종료 이벤트를 Task 객체화합니다.
-            m_Browser.FrameLoadStart += (X, Y) =>
-            {
-                if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
-                {
-                    m_BrowserLoadingState.Unset();
-                    m_BrowserJSObjectState.Unset();
-                }
-            };
-
+            // 브라우저 인스턴스를 준비 상태로 만듭니다.
+            Cycles.Instance.SetCompleted();
             m_Browser.FrameLoadEnd += (X, Y) =>
             {
                 if (Y.Frame.IsNotNull() && Y.Frame.IsMain)
                 {
-                    if (SCRIPT_InvokeCallback.Length > 0)
-                    {
-                        m_Browser.ExecuteScriptAsync(SCRIPT_InvokeCallback);
-                        m_Browser.ExecuteScriptAsync(Visible ? SCRIPT_InvokeVisible : SCRIPT_InvokeInvisible);
-                    }
-
-                    m_BrowserLoadingState.Set(m_Browser);
-                    m_BrowserJSObjectState.Set(true);
-
                     try
                     {
                         if (Debugger.IsAttached)
@@ -380,9 +248,6 @@ namespace OpenTalk.UI.CefUnity
                     catch { }
                 }
             };
-
-            m_Browser.JavascriptObjectRepository.ResolveObject += OnResolveJSObject;
-            //m_Browser.life
 
             // 컨트롤을 추가합니다.
             Controls.Add(m_Browser);
@@ -399,24 +264,6 @@ namespace OpenTalk.UI.CefUnity
                     m_Browser.SendToBack();
 
                 else break;
-            }
-        }
-
-        /// <summary>
-        /// 자바스크립트 객체를 바인딩 해야 할 때 실행되는 메서드입니다.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnResolveJSObject(object sender, CefSharp.Event.JavascriptBindingEventArgs e)
-        {
-            m_BrowserJSObjectState.Set(true);
-
-            lock (m_JSObjects)
-            {
-                if (m_JSObjects.ContainsKey(e.ObjectName))
-                {
-                    e.ObjectRepository.Register(e.ObjectName, m_JSObjects[e.ObjectName], true);
-                }
             }
         }
 
@@ -548,7 +395,7 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnNowVisible(EventArgs e)
         {
-            ExecuteScript(SCRIPT_InvokeVisible);
+            Scripting.Invoke(SCRIPT_InvokeVisible);
             base.OnNowVisible(e);
         }
 
@@ -558,7 +405,7 @@ namespace OpenTalk.UI.CefUnity
         /// <param name="e"></param>
         protected override void OnNowInvisible(EventArgs e)
         {
-            ExecuteScript(SCRIPT_InvokeInvisible);
+            Scripting.Invoke(SCRIPT_InvokeInvisible);
             base.OnNowInvisible(e);
         }
     }
