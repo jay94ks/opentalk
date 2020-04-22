@@ -35,8 +35,8 @@
             // m_StatusMessage
             // 
             this.m_StatusMessage.AutoSize = true;
-            this.m_StatusMessage.Dock = System.Windows.Forms.DockStyle.Top;
-            this.m_StatusMessage.Location = new System.Drawing.Point(0, 0);
+            this.m_StatusMessage.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.m_StatusMessage.Location = new System.Drawing.Point(0, 537);
             this.m_StatusMessage.Name = "m_StatusMessage";
             this.m_StatusMessage.Size = new System.Drawing.Size(131, 12);
             this.m_StatusMessage.TabIndex = 1;

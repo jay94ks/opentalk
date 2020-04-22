@@ -1,4 +1,5 @@
-﻿using OpenTalk.UI.CefUnity;
+﻿using OpenTalk.Themes;
+using OpenTalk.UI.CefUnity;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,15 +45,31 @@ namespace OpenTalk.Main.Renderers
                     string.IsNullOrWhiteSpace(m_PathName))
                     break;
 
-                m_PathName = Path.Combine(Application.Environments.ExecPath,
+                string PathName = Path.Combine(
+                    Application.Environments.ExecPath,
                     "common", m_PathName.Replace('/', '\\'));
 
                 try
                 {
-                    if (File.Exists(m_PathName))
-                        return FromFile(new FileInfo(m_PathName));
+                    if (File.Exists(PathName))
+                        return FromFile(new FileInfo(PathName));
                 }
                 catch { }
+
+
+                if (Theme.CurrentTheme != null)
+                {
+                    PathName = Path.Combine(
+                        Theme.CurrentTheme.Directory.FullName,
+                        m_PathName.Replace('/', '\\'));
+
+                    try
+                    {
+                        if (File.Exists(PathName))
+                            return FromFile(new FileInfo(PathName));
+                    }
+                    catch { }
+                }
                 break;
             }
 

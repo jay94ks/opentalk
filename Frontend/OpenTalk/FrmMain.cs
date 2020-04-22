@@ -31,6 +31,8 @@ namespace OpenTalk
             m_TrayIcon.Text = Text;
             m_TrayIcon.Icon = Icon;
             m_TrayIcon.Visible = true;
+            
+            MinimumSize = ClientSize;
 
             m_ScreenSwitcher.ScreenTypes = new Type[] {
                 typeof(ScrMainLogin),
@@ -363,6 +365,11 @@ namespace OpenTalk
             {
                 m_TrayMenuLockMode.Enabled = m_TrayMenuLogout.Enabled =
                     session.Authentication.Credential != null;
+
+                // 인증이 해제되었으면 로그인 화면으로 되돌립니다.
+                if (session.Authentication.Credential == null)
+                    m_ScreenSwitcher.SwitchScreen(typeof(ScrMainLogin));
+
             }).Wait();
         }
     }

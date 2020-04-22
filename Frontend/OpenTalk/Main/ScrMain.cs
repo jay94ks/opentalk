@@ -17,6 +17,7 @@ namespace OpenTalk.Main
 {
     public partial class ScrMain : CefScreen
     {
+        private Session m_Session;
         private Future m_ProgressDelay;
         private bool m_FirstVisible;
 
@@ -30,9 +31,34 @@ namespace OpenTalk.Main
 
             if (Router != null)
             {
-                Router.Set("/", new MainPage());
+                Router.Set("/", new MainPage(this));
                 Router.Set("/status.json", new StatusPolling(this));
             }
+
+            Program.OTK.Session.Authentication
+                .Authenticated += OnAuthenticated;
+        }
+
+        /// <summary>
+        /// 세션이 다시 인증되면 인터페이스를 다시 로드합니다.
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="operation"></param>
+        /// <param name="errorCode"></param>
+        private void OnAuthenticated(Session session, 
+            Session.Auth.Operation operation, SessionError errorCode)
+        {
+            LoadInterface("/");
+        }
+
+        /// <summary>
+        /// 메인 스크린이 로드되었을 때 실행됩니다.
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnLoad(EventArgs e)
+        {
+            m_StatusMessage.Text = "디버깅 도구를 열려면 이 메시지를 더블클릭하십시오.";
+            base.OnLoad(e);
         }
 
         /// <summary>
@@ -130,12 +156,6 @@ namespace OpenTalk.Main
             }
 
             base.OnDialogRequested(e);
-        }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            m_StatusMessage.Text = "디버깅 도구를 열려면 이 메시지를 더블클릭하십시오.";
-            base.OnLoad(e);
         }
 
         /// <summary>

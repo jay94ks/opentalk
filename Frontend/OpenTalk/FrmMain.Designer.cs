@@ -106,7 +106,7 @@
             this.m_ScreenSwitcher.Location = new System.Drawing.Point(0, 0);
             this.m_ScreenSwitcher.Name = "m_ScreenSwitcher";
             this.m_ScreenSwitcher.ScreenTypes = new System.Type[0];
-            this.m_ScreenSwitcher.Size = new System.Drawing.Size(398, 549);
+            this.m_ScreenSwitcher.Size = new System.Drawing.Size(376, 535);
             this.m_ScreenSwitcher.TabIndex = 1;
             this.m_ScreenSwitcher.VisibleScreenType = null;
             // 
@@ -114,7 +114,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(398, 549);
+            this.ClientSize = new System.Drawing.Size(376, 535);
             this.Controls.Add(this.m_ScreenSwitcher);
             this.Name = "FrmMain";
             this.Text = "OpenTalk";

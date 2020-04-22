@@ -410,7 +410,7 @@ namespace OpenTalk.UI.CefUnity
                 {
                     int Offset = RequestedUri.IndexOf('?');
 
-                    QueryString = Offset > 0 ? RequestedUri.Substring(Offset + 1).Trim() : null;
+                    QueryString = Offset >= 0 ? RequestedUri.Substring(Offset + 1).Trim() : null;
                     RequestedUri = Uri.UnescapeDataString(RequestedUri.Substring(0, Offset)).Trim();
                 }
 

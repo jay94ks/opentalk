@@ -1,0 +1,100 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="/scripts/jQuery-3.5.0.min.js"></script>
+    <script src="/scripts/OpenTalk.js"></script>
+    <link rel="stylesheet" href="/3rd-party/font-awesome/css/min.css" />
+    <link rel="stylesheet" href="/styles/default.css" />
+    <link rel="stylesheet" href="/styles/spinner.css" />
+</head>
+	<body>
+        <!-- 모든 인터페이스는 로딩을 직접 구현해야합니다. -->
+		<div class="otk-view otk-loading">
+			<!-- 로딩 화면입니다. -->
+			<div class="otk-spinner" style="top: 50%; margin-top: -100px">
+				<div class="otk-spin-circle c1"></div><div class="otk-spin-circle c2"></div>
+				<div class="otk-spin-circle c3"></div><div class="otk-spin-circle c4"></div>
+			</div>
+		</div>
+
+        <!-- 인터페이스 컨테이너입니다. -->
+		<div class="otk-view otk-container">
+            <div class="otk-sidebar">
+                <div class="otk-sidebar-item otk-sidebar-current" data-target="#friends">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                </div>
+                <div class="otk-sidebar-item" data-target="#chatings">
+                    <i class="fa fa-commenting" aria-hidden="true"></i>
+                </div>
+                <div class="otk-sidebar-item" data-target="#myinfo">
+                    <i class="fa fa-tag" aria-hidden="true"></i>
+                </div>
+                <div class="otk-sidebar-item" data-target="#more">
+                    <i class="fa fa-asterisk" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div class="otk-page otk-page-current" id="friends">
+                <div class="page-content">
+                    <h1>친구</h1>
+                    <header class="otk-searchbar">
+                        <form method="get" id="sch_friends">
+                            <input type="text" placeholder="이름 검색" name="name" />
+                            <button type="submit">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </header>
+                    <article class="otk-friends">
+                        <section class="otk-list otk-my-profile">
+                            <h1>내 프로필</h1>
+                            <!-- 이 밑으로 각 프로필 항목들이 덧붙혀집니다. -->
+                        </section>
+                        <section class="otk-list otk-favorated-friends">
+                            <h1>즐겨찾기</h1>
+                            <!-- 이 밑으로 각 프로필 항목들이 덧붙혀집니다. -->
+                        </section>
+                        <section class="otk-list otk-just-friends">
+                            <h1>친구 <span id="friends_count">0</span></h1>
+                            <!-- 이 밑으로 각 프로필 항목들이 덧붙혀집니다. -->
+                        </section>
+                    </article>
+                </div>
+            </div>
+            <div class="otk-page" id="chatings">
+                <div class="page-content">
+                    <h1>채팅</h1>
+                    <header class="otk-searchbar">
+                        <form method="get" id="sch_chats">
+                            <input type="text" placeholder="채팅방 이름, 참여자 검색" name="name" />
+                            <button type="submit">
+                                <i class="fa fa-search" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </header>
+                    <article class="otk-chattings">
+                        <section class="otk-list otk-chats">
+                        </section>
+                    </article>
+                </div>
+            </div>
+            <div class="otk-page" id="myinfo">
+                <div class="page-content">
+                    <h1>내 정보</h1>
+                    <article class="otk-myinfo">
+                        내정보
+                    </article>
+                </div>
+            </div>
+            <div class="otk-page" id="more">
+                <div class="page-content">
+                    <h1>더보기</h1>
+                    <article class="otk-more">
+                        <section class="otk-list otk-chats">
+                        </section>
+                    </article>
+                </div>
+            </div>
+		</div>
+	</body>
+</html>

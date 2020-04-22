@@ -1,0 +1,130 @@
+* { box-sizing: border-box; }
+
+body {
+    -webkit-user-select: none;
+    -moz-user-select: -moz-none;
+    -ms-user-select: none;
+    user-select: none
+}
+
+input:focus {
+    outline: none;
+}
+
+.otk-view { display: block; position: absolute; overflow: hidden;
+	top: 0; left: 0; right: 0; bottom: 0; height: 100%; width: 100%;
+	opacity: 0.0; transition: 0.5s; }
+
+.otk-loading { opacity: 1.0; z-index: 10; }
+.otk-container { opacity: 0.0; z-index: 11; }
+
+body.otk-ready > .otk-loading { opacity: 0.0; }
+body.otk-ready > .otk-container { opacity: 1.0; }
+
+/* 페이지 요소는 기본적으로 보이지 않습니다. */
+.otk-container > .otk-page { position: absolute; overflow-x: hidden; overflow-y: auto;
+    left: 20%; top: 0; bottom: 0; width: 100%; height: 100%;
+    transition: 0.5s; opacity: 0.0; }
+
+/* 모든 페이지는 맨 우측에 있다가 보이게 될때 좌측으로 이동, 보여지게 됩니다. */
+.otk-container > .otk-page.otk-page-current {
+    left: 0%; opacity: 1.0; z-index: 2; }
+
+/* 보여지던 페이지는 보여지지 않게 될 때 우측으로 사라지게 됩니다. */
+.otk-container > .otk-page.otk-page-previous {
+    left: 20%; opacity: 0.0; }
+
+/* 페이지, 사이드 바가 아닌 경우 보여주지 않습니다. */
+.otk-container > *:not(.otk-page) { display: none; }
+.otk-container > .otk-sidebar { display: unset; }
+
+/* 사이드 바 입니다. */
+.otk-sidebar { position: absolute; overflow-x: hidden; overflow-y: auto;
+    left: 0px; width: 65px; top: 0px; height: 100%; background-color: #efefef;
+    border-right: #808080; z-index: 3; }
+
+.otk-sidebar > .otk-sidebar-item { 
+    width: 65px; height: 65px; vertical-align: middle;
+    text-align: center; font-size: 25px; color: #929292;
+    cursor: pointer; }
+
+.otk-sidebar > .otk-sidebar-item i { padding-top: 20px; }
+.otk-sidebar > .otk-sidebar-item.otk-sidebar-current { color: black; cursor: unset; }
+
+/* 페이지 내부 컨텐트 컨테이너입니다. */
+.otk-page > .page-content { position: absolute;
+    left: 65px; right: 0px; z-index: 1; }
+
+/* 페이지 타이틀. */
+.otk-page > .page-content > h1 { display: block; position: absolute; 
+    top: 0px; font-size: 18px; font-weight: bold; padding-left: 10px; }
+
+/* 검색 바. */
+.otk-page > .page-content > header {display: block; position: absolute; 
+    top: 45px; font-size: 18px; font-weight: bold; width: 100%; text-align: center;
+    padding-left: 10px; padding-right: 10px; }
+
+header.otk-searchbar input[type="text"] { display: inline-block;
+    width: 100%; height: 30px; padding: 3px; border: 1px solid white; 
+    background-color: #f3f3f3; border-radius: 10px; }
+
+header.otk-searchbar input[type="text"]:focus {
+    border: 1px solid #e2e2e2; }
+
+header.otk-searchbar button[type="submit"] { display: block; position: absolute;
+    right: 0px; top: 0px; background-color: transparent; padding-top: 5px; margin-right: 10px;
+    font-size: 17px; border: none; }
+
+.page-content > article { padding-top: 45px; }
+.page-content > article.otk-friends { padding-top: 85px; }
+.page-content > article.otk-chattings { padding-top: 85px; }
+
+.otk-friends > section { position: relative; display: block;
+    width: 100%; }
+
+.otk-friends > section > h1 { position: relative; display: block;
+    width: 100%; font-size: 14px; font-weight: normal; 
+    color: #808080; padding-left: 10px; padding-right: 10px; }
+
+.otk-friends > section > h1 > span { position: relative; display: block;
+    margin-left: 10px; float: right; }
+
+.otk-list {
+    padding-top: 5px; padding-bottom: 10px;
+}
+
+.otk-list > .otk-item {
+    display: block; width: 100%; height: 70px;
+    padding-left: 10px; padding-right: 10px;
+}
+
+.otk-item.otk-friend-item > div { float: left; }
+
+.otk-item.otk-friend-item > div.my-profile-icon {
+    margin-top: 10px; margin-right: 10px; border-radius: 15px;
+    width: 50px; height: 50px; background-color: #808080;
+    border: 1px solid #e2e2e2; cursor: pointer; }
+
+.otk-item.otk-friend-item > div.my-profile-body { display: table;
+    padding-top: 10px; padding-bottom: 10px; height: 70px;
+    overflow: hidden; }
+
+.otk-item.otk-friend-item >
+div.my-profile-body > div { display: table-cell; vertical-align: middle; }
+
+.otk-item.otk-friend-item > 
+div.my-profile-body > div > h2 { margin: 0 0 0 0; font-size: 14px; font-weight: bold; }
+
+.otk-item.otk-friend-item >
+div.my-profile-body > div > span { font-size: 14px; width: 100%; }
+
+.otk-item.otk-friend-item > 
+div.my-profile-body > div > span:empty { display: none; }
+
+.otk-list > .otk-item:hover {
+    background-color: #eeeeee
+}
+
+.otk-item.otk-item-selected {
+    background-color: #e0e0e0
+}

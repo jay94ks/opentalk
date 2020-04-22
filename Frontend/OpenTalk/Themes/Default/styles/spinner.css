@@ -1,0 +1,80 @@
+.otk-spinner { position: relative; margin: 0 auto;
+	height: 200px; width: 200px; zoom: 0.5; border-radius: 50%;
+	transition: 1s ease-in-out all;
+	animation: otk-rotate 2s cubic-bezier(0.465, 0.183, 0.153, 0.946) infinite; }
+
+.otk-spinner > .otk-spin-circle { position: absolute;
+  height: 40px; width: 40px; border-radius: 50%; }
+
+.otk-spinner > .otk-spin-circle.c1 {
+  left: 80px; top: 5px; 
+  background: #4384F8;
+  animation: otk-circle-c1 4s cubic-bezier(0.645, 0.045, 0.355, 1) infinite; }
+
+.otk-spinner > .otk-spin-circle.c2 {
+  left: 5px; top: 80px;
+  background: #34A855;
+  animation: otk-circle-c2 4s cubic-bezier(0.645, 0.045, 0.355, 1) infinite; }
+
+.otk-spinner > .otk-spin-circle.c3 {
+  left: 80px; bottom: 5px;
+  background: #FBBD06;
+  animation: otk-circle-c3 4s cubic-bezier(0.645, 0.045, 0.355, 1) infinite; }
+
+.otk-spinner > .otk-spin-circle.c4 {
+  right: 5px; top: 80px;
+  background: #EA4436;
+  animation: otk-circle-c4 4s cubic-bezier(0.645, 0.045, 0.355, 1) infinite; }
+
+@keyframes otk-rotate {
+  from {
+   transform: otk-rotate(0deg); 
+  }
+  to {
+    transform: otk-rotate(360deg);
+  }
+}
+@keyframes otk-circle-c1 {
+0%   { background: #4384F8; top: 5px; }
+24%  { background: #4384F8; }
+24%  { background: #4384F8; }
+25%  { background: #FBBD06; top: 80px; }
+50%  { background: #FBBD06; top: 5px; }
+55%  { background: #FBBD06; top: 5px; }
+74%  { background: #FBBD06; }
+75%  { background: #4384F8; top: 80px; }
+100% { background: #4384F8; top: 5px; }
+}
+
+@keyframes otk-circle-c2 {
+0%   { background: #34A855; left: 5px; }
+24%  { background: #34A855; }
+25%  { background: #EA4436; left: 80px; }
+50%  { background: #EA4436; left: 5px; }
+55%  { background: #EA4436; left: 5px; }
+74%  { background: #EA4436; }
+75%  { background: #34A855; left: 80px; }
+100% { background: #34A855; left: 5px; }
+}
+
+@keyframes otk-circle-c3 {
+0%   { background: #FBBD06; bottom: 5px; }
+24%  { background: #FBBD06; }
+25%  { background: #4384F8; bottom: 80px; }
+50%  { background: #4384F8; bottom: 5px; }
+55%  { background: #4384F8; bottom: 5px; }
+74%  { background: #4384F8; }
+75%  { background: #FBBD06; bottom: 80px; }
+100% { background: #FBBD06; bottom: 5px; }
+}
+
+@keyframes otk-circle-c4 {
+0%   { background: #EA4436; right: 5px; }
+24%  { background: #EA4436; }
+25%  { background: #34A855; right: 80px; }
+50%  { background: #34A855; right: 5px; }
+55%  { background: #34A855; right: 5px; }
+74%  { background: #34A855; }
+75%  { background: #EA4436; right: 80px; }
+100% { background: #EA4436; right: 5px; }
+}
